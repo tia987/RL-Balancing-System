@@ -10,3 +10,5 @@ source .venv/bin/activate
 
 # Install Isaacs Sym
 uv pip install "isaacsim[all,extscache]==5.1.0" --extra-index-url https://pypi.nvidia.com
+
+uv pip install --no-deps -e src

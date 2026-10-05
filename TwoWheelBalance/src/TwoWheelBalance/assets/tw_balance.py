@@ -19,7 +19,7 @@ _DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 BALANCE_BOT_CFG = ArticulationCfg(
     spawn=sim_utils.UrdfFileCfg(
-        asset_path=os.path.join(_DATA_DIR, "2w_balance.urdf"),
+        asset_path=os.path.join(_DATA_DIR, "tw_balance.urdf"),
         fix_base=False,  # free-floating base: it has to be able to fall over
         joint_drive=sim_utils.UrdfConverterCfg.JointDriveCfg(
             gains=sim_utils.UrdfConverterCfg.JointDriveCfg.PDGainsCfg(stiffness=0.0, damping=0.0),

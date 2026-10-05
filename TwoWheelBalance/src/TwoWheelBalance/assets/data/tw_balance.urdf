@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!--
+  Two-wheeled self-balancing robot.
+  Frame convention: +x forward, +y left, +z up. Wheel axle is along y.
+  Body box: 0.10 (x) x 0.20 (y) x 0.15 (z) m, 1.0 kg, CoM 5 cm above the axle.
+  Wheels: radius 0.05 m, width 0.02 m, 0.1 kg each.
+  Both wheel joints use axis +y, so the same positive velocity on both = drive forward.
+  Spawn the base ~0.11 m above the ground (axle is 0.05 m below the base centre).
+-->
+<robot name="balance_bot">
+
+  <material name="body_blue"><color rgba="0.2 0.4 0.8 1.0"/></material>
+  <material name="wheel_black"><color rgba="0.1 0.1 0.1 1.0"/></material>
+
+  <!-- Body -->
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.15 0.15 0.15"/></geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.50 0.15 0.15"/></geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <!-- solid box: I = m/12 * (a^2 + b^2) -->
+      <inertia ixx="0.005208" iyy="0.002708" izz="0.004167" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- Left wheel -->
+  <link name="left_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.05" length="0.02"/></geometry>
+      <material name="wheel_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.05" length="0.02"/></geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <!-- spin axis is y: iyy = m r^2 / 2, ixx = izz = m (3 r^2 + w^2) / 12 -->
+      <inertia ixx="6.6e-5" iyy="1.25e-4" izz="6.6e-5" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="left_wheel"/>
+    <origin xyz="0 0.115 -0.05" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.0" friction="0.0"/>
+    <limit effort="1.0" velocity="50.0"/>
+  </joint>
+
+  <!-- Right wheel -->
+  <link name="right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.05" length="0.02"/></geometry>
+      <material name="wheel_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.05" length="0.02"/></geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="6.6e-5" iyy="1.25e-4" izz="6.6e-5" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="right_wheel"/>
+    <origin xyz="0 -0.115 -0.05" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.0" friction="0.0"/>
+    <limit effort="1.0" velocity="50.0"/>
+  </joint>
+
+</robot>
+

@@ -251,8 +251,9 @@ class RewardsCfg:
     )
     # (5) Shaping tasks: lower base angular velocity
     base_ang_vel = RewTerm(
-        func=mdp.base_ang_vel,
+        func=mdp.base_ang_vel_l2,
         weight=-0.005,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
 
 

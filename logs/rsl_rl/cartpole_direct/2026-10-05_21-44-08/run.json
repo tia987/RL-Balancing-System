@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-09-29T14:10:14.331121+00:00",
+  "created_at": "2026-10-05T19:44:08.641197+00:00",
   "library": "rsl_rl",
   "metadata": {
     "agent": "rsl_rl_cfg_entry_point"
   },
-  "task": "Isaac-Cartpole",
+  "task": "Twowheelbalance-Twb-Twb",
   "version": 1
 }

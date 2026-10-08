@@ -32,4 +32,4 @@ cp $SRC/velocity_env_cfg.py $DST/velocity_env_cfg.py
 # which should be deleted
 
 # Install working folder
-uv pip install --no-deps -e src
+uv pip install --no-deps -e TwoWheelBalance

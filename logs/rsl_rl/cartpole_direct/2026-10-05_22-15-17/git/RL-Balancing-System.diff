@@ -1,0 +1,119 @@
+--- git commit ---
+20c02cafed3f09655db4f3a90cee5840a1853c74
+
+
+--- git status ---
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   TwoWheelBalance/src/TwoWheelBalance/tasks/twb/config/twb/env_cfg.py
+	modified:   TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/__init__.pyi
+	modified:   TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/rewards.py
+	modified:   installation.sh
+	deleted:    logs/rsl_rl/cartpole/2026-09-29_16-10-14/run.json
+	modified:   run.sh
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	Makefile
+	logs/rsl_rl/cartpole_direct/
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/config/twb/env_cfg.py b/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/config/twb/env_cfg.py
+index 1e368bc..9c0f96b 100644
+--- a/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/config/twb/env_cfg.py
++++ b/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/config/twb/env_cfg.py
+@@ -251,8 +251,9 @@ class RewardsCfg:
+     )
+     # (5) Shaping tasks: lower base angular velocity
+     base_ang_vel = RewTerm(
+-        func=mdp.base_ang_vel,
++        func=mdp.base_ang_vel_l2,
+         weight=-0.005,
++        params={"asset_cfg": SceneEntityCfg("robot")},
+     )
+ 
+ 
+diff --git a/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/__init__.pyi b/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/__init__.pyi
+index 8807c4a..294c377 100644
+--- a/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/__init__.pyi
++++ b/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/__init__.pyi
+@@ -10,4 +10,4 @@ __all__ = [
+ # Forward stable MDP terms lazily, then override with environment-specific terms below.
+ from isaaclab.envs.mdp import *  # noqa: F401, F403
+ 
+-from .rewards import joint_pos_target_l2
++from .rewards import joint_pos_target_l2, base_ang_vel_l2
+diff --git a/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/rewards.py b/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/rewards.py
+index 065a54e..e7734f2 100644
+--- a/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/rewards.py
++++ b/TwoWheelBalance/src/TwoWheelBalance/tasks/twb/mdp/rewards.py
+@@ -25,3 +25,23 @@ def joint_pos_target_l2(env: ManagerBasedRLEnv, target: float, asset_cfg: SceneE
+     joint_pos = wrap_to_pi(asset.data.joint_pos.torch[:, asset_cfg.joint_ids])
+     # compute the reward
+     return torch.sum(torch.square(joint_pos - target), dim=1)
++
++# def base_ang_vel_l2(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.Tensor:
++#     """Penalize the base angular velocity using its squared magnitude."""
++#     # extract the used quantities (to enable type-hinting)
++#     asset: Articulation = env.scene[asset_cfg.name]
++#
++#     # Get the base (root) angular velocity from the asset data (shape: [num_envs, 3])
++#     ang_vel = asset.data.root_ang_w
++#
++#     # Compute the sum of squares across the x, y, z axes (dim=1)
++#     # This reduces the shape from [num_envs, 3] to [num_envs]
++#     return torch.sum(torch.square(ang_vel), dim=1)
++
++def base_ang_vel_l2(
++    env: ManagerBasedRLEnv,
++    asset_cfg: SceneEntityCfg,
++) -> torch.Tensor:
++    asset = env.scene[asset_cfg.name]
++    ang_vel = asset.data.root_ang_vel_b
++    return torch.sum(torch.square(ang_vel), dim=-1)
+diff --git a/installation.sh b/installation.sh
+index 4dadac4..31919f2 100644
+--- a/installation.sh
++++ b/installation.sh
+@@ -32,4 +32,4 @@ cp $SRC/velocity_env_cfg.py $DST/velocity_env_cfg.py
+ # which should be deleted
+ 
+ # Install working folder
+-uv pip install --no-deps -e src
++uv pip install --no-deps -e TwoWheelBalance
+diff --git a/logs/rsl_rl/cartpole/2026-09-29_16-10-14/run.json b/logs/rsl_rl/cartpole/2026-09-29_16-10-14/run.json
+deleted file mode 100644
+index b82d9c7..0000000
+--- a/logs/rsl_rl/cartpole/2026-09-29_16-10-14/run.json
++++ /dev/null
+@@ -1,9 +0,0 @@
+-{
+-  "created_at": "2026-09-29T14:10:14.331121+00:00",
+-  "library": "rsl_rl",
+-  "metadata": {
+-    "agent": "rsl_rl_cfg_entry_point"
+-  },
+-  "task": "Isaac-Cartpole",
+-  "version": 1
+-}
+diff --git a/run.sh b/run.sh
+index b386768..f58421c 100644
+--- a/run.sh
++++ b/run.sh
+@@ -2,4 +2,7 @@
+ 
+ # Launch environment
+ source .env_isaaclab/bin/activate
+-python3 IsaacLab/scripts/tutorials/00_sim/create_empty.py --viz kit # none for headless
+\ No newline at end of file
++python3 IsaacLab/scripts/tutorials/00_sim/create_empty.py --viz kit # none for headless
++
++cd TwoWheelBalance
++python scripts/reinforcement_learning/play.py --task IsaacContrib-Velocity-Rough-AnymalC --rl_library rsl_rl --viz kit

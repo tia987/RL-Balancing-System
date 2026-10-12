@@ -33,3 +33,6 @@ cp $SRC/velocity_env_cfg.py $DST/velocity_env_cfg.py
 
 # Install working folder
 uv pip install --no-deps -e TwoWheelBalance
+
+# moviepy 2.0 doesn't work in this scenario
+pip install "moviepy<2.0"

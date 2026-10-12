@@ -9,7 +9,7 @@ from dataclasses import MISSING
 
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
-from isaaclab.envs import ManagerBasedRLEnvCfg
+from isaaclab.envs import ManagerBasedRLEnvCfg, ViewerCfg
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
@@ -52,8 +52,8 @@ class TwbPhysicsCfg(PresetCfg):
     physx: PhysxAutoCfg = PhysxAutoCfg(isaacsim_physx=isaacsim_physx, ovphysx=ovphysx)
     newton_mjwarp: NewtonCfg = NewtonCfg(
         solver_cfg=MJWarpSolverCfg(
-            njmax=5,
-            nconmax=3,
+            njmax=100,
+            nconmax=10,
             cone="pyramidal",
             impratio=1,
             integrator="implicitfast",
@@ -82,26 +82,11 @@ class TwbSceneCfg(InteractiveSceneCfg):
     # Define the robot
     robot: ArticulationCfg = BALANCE_BOT_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
-    # # ground plane
-    # ground = AssetBaseCfg(
-    #     prim_path="/World/ground",
-    #     spawn=sim_utils.GroundPlaneCfg(size=(100.0, 100.0)),
-    # )
-    #
-    # # robot
-    # robot: ArticulationCfg = BALANCE_BOT_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-    #
-    # # lights
-    # dome_light = AssetBaseCfg(
-    #     prim_path="/World/DomeLight",
-    #     spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
-    # )
-
     # Imported from anymal velocity_env_cfg.py 
     # ground terrain
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
-        terrain_type="generator",
+        terrain_type="generator", #previous: generator
         terrain_generator=ROUGH_TERRAINS_CFG.replace(curriculum=True),
         max_init_terrain_level=0,
         collision_group=-1,
@@ -124,6 +109,7 @@ class TwbSceneCfg(InteractiveSceneCfg):
     # backend-specific fields such as ``global_world_only`` are ignored by the backends that do not use them
     
     # @TODO: For the master thesis
+    #
     # height_scanner = RayCasterCfg(
     #     prim_path="{ENV_REGEX_NS}/Robot",
     #     offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
@@ -160,7 +146,7 @@ class CommandsCfg:
         heading_control_stiffness=0.5,
         debug_vis=False,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
-            lin_vel_x=(-1.0, 1.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)
+            lin_vel_x=(-2.0, 2.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)
         ),
     )
 
@@ -169,7 +155,7 @@ class ActionsCfg:
     """Action specifications for the MDP. Set wheel joints to rotate"""
 
     # @CHANGE: Reduced scale from 100 to default 1
-    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=1.0)
+    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=100.0)
 
 
 @configclass
@@ -182,16 +168,19 @@ class ObservationsCfg:
 
         # observation terms (order preserved)
         # Added noise to training for the observation
+        # @NOTE: probably base_lin_vel to remove due to hardware
         base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
         # base_ang_vel = ObsTerm(func=mdp.base_ang_vel) # Case without noise
         projected_gravity = ObsTerm(func=mdp.projected_gravity)
         # TODO: check difference between with and without _rel, @note: anymal doesn't use _rel
         # setup for the moment without noise
-        joint_pos = ObsTerm(func=mdp.joint_pos_rel)
+        #
+        # joint_pos = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel = ObsTerm(func=mdp.joint_vel_rel)
         # @ADDED: previous action, from anymal
         actions = ObsTerm(func=mdp.last_action)
+        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -217,6 +206,7 @@ class EventCfg:
     )
 
     # @BUG: body name creates troubles
+    #
     # add_base_mass = EventTerm(
     #     func=mdp.randomize_rigid_body_mass,
     #     mode="startup",
@@ -351,8 +341,16 @@ class TwbEnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 2
         self.episode_length_s = 20.0
         # visualizer camera settings
-        self.sim.default_visualizer_cfg = VisualizerCfg(eye=(8.0, 0.0, 5.0))
+        # self.sim.default_visualizer_cfg = VisualizerCfg(eye=(8.0, 0.0, 5.0)) 
+        # Visualizer to track the robot directly
+        self.viewer = ViewerCfg(
+            origin_type="asset_root",
+            asset_name="robot",
+            env_index=0,
+            eye=(3.0, 3.0, 1.5),
+            lookat=(0.0, 0.0, 0.0),
+        )
         # simulation settings
-        self.sim.dt = 1 / 120
+        self.sim.dt = 1 / 240
         self.sim.render_interval = self.decimation
         self.sim.physics = TwbPhysicsCfg()

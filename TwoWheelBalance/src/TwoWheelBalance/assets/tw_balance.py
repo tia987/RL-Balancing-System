@@ -35,7 +35,7 @@ BALANCE_BOT_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.11),  # axle is 5 cm below base centre, wheel radius 5 cm
+        pos=(0.0, 0.0, 0.61),  # axle is 30 cm below base centre, wheel radius 30 cm
         joint_pos={".*": 0.0},
         joint_vel={".*": 0.0},
     ),
@@ -43,7 +43,7 @@ BALANCE_BOT_CFG = ArticulationCfg(
         # stiffness = damping = 0  ->  wheels are driven by raw torque commands
         "wheels": ImplicitActuatorCfg(
             joint_names_expr=[".*_wheel_joint"],
-            effort_limit_sim=1.0,
+            effort_limit_sim=50.0,
             velocity_limit_sim=50.0,
             stiffness=0.0,
             damping=0.0,

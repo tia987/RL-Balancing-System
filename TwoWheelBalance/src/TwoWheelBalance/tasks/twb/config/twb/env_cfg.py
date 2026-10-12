@@ -16,6 +16,7 @@ from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
+from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.physics import PhysxAutoCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
@@ -24,6 +25,7 @@ from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG
 # from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
 from isaaclab.utils import configclass
+from isaaclab.utils.noise import UniformNoiseCfg as Unoise
 from isaaclab.visualizers import VisualizerCfg
 from isaaclab_newton.physics import KaminoPADMMSolverCfg, MJWarpSolverCfg, NewtonCfg
 from isaaclab_ov.physics import OvPhysxCfg
@@ -100,8 +102,8 @@ class TwbSceneCfg(InteractiveSceneCfg):
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
         terrain_type="generator",
-        terrain_generator=ROUGH_TERRAINS_CFG,
-        max_init_terrain_level=5,
+        terrain_generator=ROUGH_TERRAINS_CFG.replace(curriculum=True),
+        max_init_terrain_level=0,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
@@ -120,15 +122,17 @@ class TwbSceneCfg(InteractiveSceneCfg):
     # robot: ArticulationCfg = MISSING
     # sensors: the concrete implementation is selected automatically from the active physics backend;
     # backend-specific fields such as ``global_world_only`` are ignored by the backends that do not use them
-    height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Robot",
-        offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
-        ray_alignment="yaw",
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
-        debug_vis=False,
-        mesh_prim_paths=["/World/ground"],
-        global_world_only=True,
-    )
+    
+    # @TODO: For the master thesis
+    # height_scanner = RayCasterCfg(
+    #     prim_path="{ENV_REGEX_NS}/Robot",
+    #     offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
+    #     ray_alignment="yaw",
+    #     pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
+    #     debug_vis=False,
+    #     mesh_prim_paths=["/World/ground"],
+    #     global_world_only=True,
+    # )
     # contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/[^/]*", history_length=3, track_air_time=True) # Remove contact force for the moment, given that robot doesn't have sensors
     # lights
     sky_light = AssetBaseCfg(
@@ -143,12 +147,29 @@ class TwbSceneCfg(InteractiveSceneCfg):
 # MDP settings
 ##
 
+@configclass
+class CommandsCfg:
+    """Command specifications for the MDP."""
+
+    base_velocity = mdp.UniformVelocityCommandCfg(
+        asset_name="robot",
+        resampling_time_range=(10.0, 10.0),
+        rel_standing_envs=0.02,
+        rel_heading_envs=1.0,
+        heading_command=True,
+        heading_control_stiffness=0.5,
+        debug_vis=False,
+        ranges=mdp.UniformVelocityCommandCfg.Ranges(
+            lin_vel_x=(-1.0, 1.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)
+        ),
+    )
 
 @configclass
 class ActionsCfg:
-    """Action specifications for the MDP."""
+    """Action specifications for the MDP. Set wheel joints to rotate"""
 
-    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=100.0)
+    # @CHANGE: Reduced scale from 100 to default 1
+    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=1.0)
 
 
 @configclass
@@ -160,10 +181,17 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
+        # Added noise to training for the observation
+        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
+        # base_ang_vel = ObsTerm(func=mdp.base_ang_vel) # Case without noise
         projected_gravity = ObsTerm(func=mdp.projected_gravity)
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel)
-        joint_pos_rel = ObsTerm(func=mdp.joint_pos_rel)
-        joint_vel_rel = ObsTerm(func=mdp.joint_vel_rel)
+        # TODO: check difference between with and without _rel, @note: anymal doesn't use _rel
+        # setup for the moment without noise
+        joint_pos = ObsTerm(func=mdp.joint_pos_rel)
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel)
+        # @ADDED: previous action, from anymal
+        actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -188,6 +216,19 @@ class EventCfg:
         },
     )
 
+    # @BUG: body name creates troubles
+    # add_base_mass = EventTerm(
+    #     func=mdp.randomize_rigid_body_mass,
+    #     mode="startup",
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", body_names="base"),
+    #         # multiplicative +-25% log-uniform: scale-invariant across robot sizes with geometric mean 1.0
+    #         "mass_distribution_params": (1 / 1.25, 1.25),
+    #         "operation": "scale",
+    #         "distribution": "log_uniform",
+    #     },
+    # )
+    
     reset_base = EventTerm(
         func=mdp.reset_root_state_uniform,
         mode="reset",
@@ -199,8 +240,12 @@ class EventCfg:
             "asset_cfg": SceneEntityCfg("robot"),
             "pose_range": {"pitch": (-0.2, 0.2)}, 
             "velocity_range": {
-                "x": (-0.1, 0.1), "y": (-0.1, 0.1), "z": (-0.1, 0.1), 
-                "roll": (-0.1, 0.1), "pitch": (-0.1, 0.1), "yaw": (-0.1, 0.1)
+                "x": (-0.1, 0.1), 
+                "y": (-0.1, 0.1), 
+                "z": (-0.1, 0.1), 
+                "roll": (-0.1, 0.1), 
+                "pitch": (-0.1, 0.1), 
+                "yaw": (-0.1, 0.1)
             },
         },
     )
@@ -210,86 +255,101 @@ class EventCfg:
 class RewardsCfg:
     """Reward terms for the MDP."""
     
-    # Old cartpole
-    # # (1) Constant running reward
-    # alive = RewTerm(func=mdp.is_alive, weight=1.0)
-    # # (2) Failure penalty
-    # terminating = RewTerm(func=mdp.is_terminated, weight=-2.0)
-    # # (3) Primary task: keep pole upright
-    # pole_pos = RewTerm(
-    #     func=mdp.joint_pos_target_l2,
-    #     weight=-1.0,
-    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=["cart_to_pole"]), "target": 0.0},
-    # )
-    # # (4) Shaping tasks: lower cart velocity
-    # cart_vel = RewTerm(
-    #     func=mdp.joint_vel_l1,
-    #     weight=-0.01,
-    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=["slider_to_cart"])},
-    # )
-    # # (5) Shaping tasks: lower pole angular velocity
-    # pole_vel = RewTerm(
-    #     func=mdp.joint_vel_l1,
-    #     weight=-0.005,
-    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=["cart_to_pole"])},
-    # )
-    
-    # (1) Constant running reward
+    # Positive rewards - tasks
     alive = RewTerm(func=mdp.is_alive, weight=1.0)
-    # (2) Failure penalty
-    terminating = RewTerm(func=mdp.is_terminated, weight=-2.0)
-    # (3) Primary task: keep base upright (pitch/roll = 0)
+
+    # Locomotion
+    track_lin_vel_xy_exp = RewTerm(
+        func=mdp.track_lin_vel_xy_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
+    )
+    # @TODO:Check that this function ensures robot vertical stabilization -> Yaw rate
+    track_ang_vel_z_exp = RewTerm(
+        func=mdp.track_ang_vel_z_exp, weight=0.5, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
+    )
+    
+    # Negative rewards - penalties
+    #
+    # Balance
+    # Keep base upright
     base_upright = RewTerm(
         func=mdp.flat_orientation_l2,
         weight=-1.0,
     )
-    # (4) Shaping tasks: lower wheel velocity
+    # Lower wheel velocity
     wheel_vel = RewTerm(
         func=mdp.joint_vel_l1,
-        weight=-0.01,
+        weight=-0.005,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_wheel_joint"])},
     )
-    # (5) Shaping tasks: lower base angular velocity
+    # Lower angular velocity
     base_ang_vel = RewTerm(
         func=mdp.base_ang_vel_l2,
         weight=-0.005,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
+    
+    # Efficiency
+    # Force less actions
+    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
+    # Reduce joint accleration @BRIEF: Not sure if to add in this case
+    # dof_acc_l2 = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7)
+    
+    # Failure penalty
+    # terminating = RewTerm(func=mdp.is_terminated, weight=-2.0) # Turn it off for the moment @CHECK: if necessary to reactivate later
+    
+
 
 
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
-    # (1) Time out
+    # Time out
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
+    # Robot tilts too much
+    bad_orientation = DoneTerm(
+        func=mdp.bad_orientation,
+        params={
+            "limit_angle": 0.6,
+            "asset_cfg": SceneEntityCfg("robot"),
+        },
+    )
 
+@configclass
+class CurriculumCfg:
+    """Curriculum settings."""
+
+    terrain_levels = CurrTerm(
+        func=mdp.terrain_levels_vel,
+    )
 
 ##
 # Environment configuration
 ##
-
 
 @configclass
 class TwbEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the cart-pole environment."""
 
     # Scene settings
-    scene: TwbSceneCfg = TwbSceneCfg(num_envs=4096, env_spacing=4.0)
+    scene: TwbSceneCfg = TwbSceneCfg(num_envs=4096, env_spacing=2.5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
+    commands: CommandsCfg = CommandsCfg()
     events: EventCfg = EventCfg()
     # MDP settings
     rewards: RewardsCfg = RewardsCfg()
     terminations: TerminationsCfg = TerminationsCfg()
+
+    curriculum: CurriculumCfg = CurriculumCfg()
 
     # Post initialization
     def __post_init__(self) -> None:
         """Post initialization."""
         # general settings
         self.decimation = 2
-        self.episode_length_s = 5
+        self.episode_length_s = 20.0
         # visualizer camera settings
         self.sim.default_visualizer_cfg = VisualizerCfg(eye=(8.0, 0.0, 5.0))
         # simulation settings

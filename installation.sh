@@ -37,4 +37,4 @@ uv pip install --no-deps -e TwoWheelBalance
 # moviepy 2.0 doesn't work in this scenario
 uv pip install "moviepy<2.0"
 
-uv pip install tensorboard tensorflow
+uv pip install tensorboard

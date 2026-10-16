@@ -6,6 +6,8 @@
 # from compute nodes), then run this script, ideally as a batch job (install.sbatch).
 set -eo pipefail
 
+module load stack/2025-06 gcc/12.2.0
+
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd -P)"
 cd "$REPO_ROOT"
 

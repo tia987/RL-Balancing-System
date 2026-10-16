@@ -11,7 +11,7 @@
 #SBATCH --mail-type=END,FAIL        # Send an email when job ends
 
 # Load some modules
-module load stack/2025-06 gcc/12.2.0 python/3.11.0 eth_proxy
+module load stack/2025-06 gcc/12.2.0 python/3.12.0 eth_proxy
 module list
 
 # Load environment

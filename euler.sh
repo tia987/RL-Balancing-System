@@ -7,7 +7,6 @@
 #SBATCH --ntasks-per-node=1         # Number of tasks per node
 #SBATCH --gpus=4                    # Add amount of gpus
 #SBATCH --gpus-per-node=1
-#SBATCH --constraint=EPYC_7763      # Select node with CPU
 #SBATCH --mem-per-cpu=8G            # Memory per CPU
 #SBATCH --time=24:00:00             # Wall clock time limit
 #SBATCH --mail-type=END,FAIL        # Send an email when job ends

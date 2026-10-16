@@ -21,4 +21,4 @@ export OMNI_KIT_ACCEPT_EULA=YES
 source env.sh
 
 # Run the program
-make train_mult i
+make train_multi ITERATIONS=6000

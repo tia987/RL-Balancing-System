@@ -5,7 +5,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 
 # Create venv through python3.12 for isaac lab compatibility
-uv venv --python 3.11 .env_isaaclab
+uv venv --python 3.12 .env_isaaclab
 source .env_isaaclab/bin/activate
 
 # Install Isaac Sym

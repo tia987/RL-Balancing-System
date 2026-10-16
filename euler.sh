@@ -20,4 +20,4 @@ module list
 source env.sh
 
 # Run the program
-make train
+make train_multi

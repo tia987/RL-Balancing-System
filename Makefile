@@ -1,4 +1,4 @@
-.PHONE: traini train_verbose train_video play play_video
+.PHONE: traini train_verbose train_video play play_video tensorboard
 
 # VENV_ACTIVATE = .env_isaaclab/bin/activate
 TASK ?= Twowheelbalance-Twb-Twb
@@ -25,3 +25,6 @@ play_video:  ## Play and record a video
 
 reset_logs:  ## Clear previous training
 	rm -rf ~/RL-Balancing-System/logs/
+
+tensorboard:	## Start forwarded tensorboard live
+	tensorboard --logdir logs --port 6006

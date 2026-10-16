@@ -22,6 +22,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG
+# from TwoWheelBalance.tasks.twb.terrain import TWB_TERRAINS_CFG
 # from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
 from isaaclab.utils import configclass
@@ -140,13 +141,13 @@ class CommandsCfg:
     base_velocity = mdp.UniformVelocityCommandCfg(
         asset_name="robot",
         resampling_time_range=(10.0, 10.0),
-        rel_standing_envs=0.02,
+        rel_standing_envs=0.2,
         rel_heading_envs=1.0,
         heading_command=True,
         heading_control_stiffness=0.5,
         debug_vis=False,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
-            lin_vel_x=(-2.0, 2.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)
+            lin_vel_x=(-1.5, 1.5), lin_vel_y=(0.0, 0.0), ang_vel_z=(-0.0, 0.0), heading=(-math.pi, math.pi)
         ),
     )
 
@@ -154,8 +155,8 @@ class CommandsCfg:
 class ActionsCfg:
     """Action specifications for the MDP. Set wheel joints to rotate"""
 
-    # @CHANGE: Reduced scale from 100 to default 1
-    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=100.0)
+    # @CHANGE: Reduced scale from 100 to 20
+    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=20.0)
 
 
 @configclass
@@ -183,7 +184,7 @@ class ObservationsCfg:
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
 
         def __post_init__(self) -> None:
-            self.enable_corruption = False
+            self.enable_corruption = True # Toggle noise # Toggle noise
             self.concatenate_terms = True
 
     # observation groups
@@ -266,11 +267,11 @@ class RewardsCfg:
         weight=-1.0,
     )
     # Lower wheel velocity
-    wheel_vel = RewTerm(
-        func=mdp.joint_vel_l1,
-        weight=-0.005,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_wheel_joint"])},
-    )
+    # wheel_vel = RewTerm(
+    #     func=mdp.joint_vel_l1,
+    #     weight=-0.005,
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_wheel_joint"])},
+    # )
     # Lower angular velocity
     base_ang_vel = RewTerm(
         func=mdp.base_ang_vel_l2,
@@ -346,11 +347,11 @@ class TwbEnvCfg(ManagerBasedRLEnvCfg):
         self.viewer = ViewerCfg(
             origin_type="asset_root",
             asset_name="robot",
-            env_index=0,
+            env_index=-1,
             eye=(3.0, 3.0, 1.5),
             lookat=(0.0, 0.0, 0.0),
         )
         # simulation settings
-        self.sim.dt = 1 / 240
+        self.sim.dt = 1 / 120
         self.sim.render_interval = self.decimation
         self.sim.physics = TwbPhysicsCfg()

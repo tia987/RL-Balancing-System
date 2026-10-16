@@ -11,7 +11,7 @@ from isaaclab_rl.rsl_rl import RslRlDistillationAlgorithmCfg, RslRlDistillationR
 @configclass
 class DistillationRunnerCfg(RslRlDistillationRunnerCfg):
     num_steps_per_env = 60
-    max_iterations = 150
+    max_iterations = 1500
     save_interval = 50
     experiment_name = "cartpole_direct"
     obs_groups = {"student": ["policy"], "teacher": ["policy"]}

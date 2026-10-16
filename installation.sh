@@ -35,4 +35,6 @@ cp $SRC/velocity_env_cfg.py $DST/velocity_env_cfg.py
 uv pip install --no-deps -e TwoWheelBalance
 
 # moviepy 2.0 doesn't work in this scenario
-pip install "moviepy<2.0"
+uv pip install "moviepy<2.0"
+
+uv pip install tensorboard tensorflow

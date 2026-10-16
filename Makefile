@@ -4,6 +4,7 @@
 TASK ?= Twowheelbalance-Twb-Twb
 PHYSICS ?= isaacsim_physx
 NUM_GPUS ?= 4
+ITERATIONS ?=3000
 
 help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[.a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
@@ -23,7 +24,7 @@ train_video:  ## Train and record a video
 
 train_multi:  ## Train on several GPUs of one node
 	python -m torch.distributed.run --nproc_per_node $(NUM_GPUS) --local_ranks_filter 0 --no-python \
-		isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs 4096 physics=$(PHYSICS) --distributed	
+		isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs 4096 --max_iterations $(ITERATIONS) physics=$(PHYSICS) --distributed	
 
 play_video:  ## Play and record a video
 	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 4096 physics=isaacsim_physx --video --video_length 1000 --video_interval 2000

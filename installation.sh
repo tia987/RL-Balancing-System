@@ -8,8 +8,8 @@ export PATH="$HOME/.local/bin:$PATH"
 uv venv --python 3.12 .env_isaaclab
 source .env_isaaclab/bin/activate
 
-# Install Isaac Sym
-uv pip install "isaacsim[all,extscache]==6.2.0" --extra-index-url https://pypi.nvidia.com
+# Install Isaac Sim
+uv pip install "isaacsim[all,extscache]==6.0.0" --extra-index-url https://pypi.nvidia.com
 
 # Install isaac Lab
 git clone git@github.com:leggedrobotics/IsaacLab-Internal.git IsaacLab

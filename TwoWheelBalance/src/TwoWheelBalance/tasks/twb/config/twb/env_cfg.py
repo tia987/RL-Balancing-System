@@ -21,8 +21,8 @@ from isaaclab.physics import PhysxAutoCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
 from isaaclab.terrains import TerrainImporterCfg
-from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG
-# from TwoWheelBalance.tasks.twb.terrain import TWB_TERRAINS_CFG
+# from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG
+from TwoWheelBalance.tasks.twb.terrain import TWB_TERRAINS_CFG
 # from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
 from isaaclab.utils import configclass
@@ -88,7 +88,7 @@ class TwbSceneCfg(InteractiveSceneCfg):
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
         terrain_type="generator", #previous: generator
-        terrain_generator=ROUGH_TERRAINS_CFG.replace(curriculum=True),
+        terrain_generator=TWB_TERRAINS_CFG.replace(curriculum=True),
         max_init_terrain_level=0,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(

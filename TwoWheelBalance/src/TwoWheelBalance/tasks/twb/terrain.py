@@ -22,5 +22,13 @@ TWB_TERRAINS_CFG = TerrainGeneratorCfg(
         "slope_inv": terrain_gen.HfInvertedPyramidSlopedTerrainCfg(
             proportion=0.2, slope_range=(0.0, 0.25), platform_width=2.0, border_width=0.25
         ),
+        # "obstacles": terrain_gen.HfDiscreteObstaclesTerrainCfg(
+        #     proportion=0.7,
+        #     obstacle_height_mode="choice",
+        #     obstacle_width_range=(0.2, 0.8),
+        #     obstacle_height_range=(0.01, 0.06),
+        #     num_obstacles=30,
+        #     platform_width=2.0,
+        # ),
     },
 )

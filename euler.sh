@@ -14,8 +14,11 @@
 module load stack/2025-06 gcc/12.2.0 python/3.12.0 eth_proxy
 module list
 
+export UV_NO_CONFIG=1
+export OMNI_KIT_ACCEPT_EULA=YES
+
 # Load environment
 source env.sh
 
 # Run the program
-make train_multi
+make train_mult i

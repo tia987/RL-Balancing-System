@@ -3,10 +3,10 @@
 #SBATCH --output=rsl.out            # Output file (default: slurm-%j.out)
 #SBATCH --error=rsl.err             # Error file  (default: slurm-%j.out)
 #SBATCH --nodes=1                   # Number of nodes
-#SBATCH --ntasks=1                  # Number of tasks
-#SBATCH --ntasks-per-node=1         # Number of tasks per node
+#SBATCH --ntasks=16                 # Number of tasks
+#SBATCH --ntasks-per-node=16        # Number of tasks per node
 #SBATCH --gpus-per-node=1
-#SBATCH --mem-per-cpu=32G            # Memory per CPU
+#SBATCH --mem-per-cpu=2G            # Memory per CPU
 #SBATCH --time=24:00:00             # Wall clock time limit
 #SBATCH --mail-type=END,FAIL        # Send an email when job ends
 

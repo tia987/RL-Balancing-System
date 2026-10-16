@@ -20,6 +20,9 @@ train_verbose:  ## Train with verbose output
 train_video:  ## Train and record a video
 	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab train --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 4096 physics=isaacsim_physx --video --video_length 1000 --video_interval 2000
 
+train_multi:
+	torch.distributed.run --nnodes=1 --nproc_per_node=2 isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs 4096 physics=$(PHYSICS) 
+
 play_video:  ## Play and record a video
 	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 4096 physics=isaacsim_physx --video --video_length 1000 --video_interval 2000
 

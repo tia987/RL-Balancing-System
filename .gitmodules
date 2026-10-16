@@ -1,3 +1,6 @@
 [submodule "IsaacLab"]
 	path = IsaacLab
 	url = git@github.com:isaac-sim/IsaacLab.git
+[submodule "IsaacLab-Internal"]
+	path = IsaacLab-Internal
+	url = git@github.com:leggedrobotics/IsaacLab-Internal.git

@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Isaac Lab 3.0-style CLI for Isaac Lab 2.3.x (RSL fork).
+#
+#   isaaclab train --rl_library rsl_rl --task <TASK> [...]
+#   isaaclab play  --rl_library rsl_rl --task <TASK> --checkpoint latest [...]
+#
+# Translates the 3.0 arguments to the 2.3 train.py / play.py scripts:
+#   --rl_library X        -> picks the script folder (default: rsl_rl)
+#   --checkpoint latest   -> dropped (2.3 loads the latest run by default)
+#   --viz none            -> --headless
+#   --viz <anything else> -> dropped (2.3 opens the Kit GUI unless --headless)
+#   key=value overrides   -> dropped if they are 3.0-only (physics=, renderer=, presets=)
+# Everything else is passed through unchanged.
+#
+# Set ISAACLAB_DRY_RUN=1 to print the command instead of running it.
+
+set -e
+
+# Repo root = parent of the folder this script lives in (symlinks resolved)
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+PROJECT_SCRIPTS="$ROOT/TwoWheelBalance/scripts"
+ISAACLAB_DIR="$ROOT/IsaacLab-Internal"
+[ -d "$ISAACLAB_DIR" ] || ISAACLAB_DIR="$ROOT/IsaacLab"
+
+usage() {
+    echo "usage: isaaclab {train|play} [--rl_library rsl_rl] --task TASK [args...]" >&2
+    exit 1
+}
+
+[ $# -ge 1 ] || usage
+CMD="$1"; shift
+case "$CMD" in
+    train|play) ;;
+    -h|--help) usage ;;
+    *) echo "isaaclab: unknown command '$CMD'" >&2; usage ;;
+esac
+
+LIB="rsl_rl"
+ARGS=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --rl_library)        LIB="$2"; shift 2 ;;
+        --rl_library=*)      LIB="${1#*=}"; shift ;;
+        --checkpoint)
+            if [ "$2" = "latest" ]; then shift 2; else ARGS+=("$1" "$2"); shift 2; fi ;;
+        --checkpoint=latest) shift ;;
+        --viz)
+            [ "$2" = "none" ] && ARGS+=("--headless"); shift 2 ;;
+        --viz=*)
+            [ "${1#*=}" = "none" ] && ARGS+=("--headless"); shift ;;
+        physics=*|renderer=*|presets=*)
+            echo "isaaclab: ignoring 3.0-only override '$1'" >&2; shift ;;
+        *)                   ARGS+=("$1"); shift ;;
+    esac
+done
+
+# Prefer the project's copy (it registers your tasks), fall back to Isaac Lab's
+SCRIPT="$PROJECT_SCRIPTS/$LIB/$CMD.py"
+[ -f "$SCRIPT" ] || { [ "$LIB" = "rsl_rl" ] && SCRIPT="$PROJECT_SCRIPTS/$CMD.py"; }
+[ -f "$SCRIPT" ] || SCRIPT="$ISAACLAB_DIR/scripts/reinforcement_learning/$LIB/$CMD.py"
+if [ ! -f "$SCRIPT" ]; then
+    echo "isaaclab: no $CMD.py found for rl_library '$LIB'" >&2
+    exit 1
+fi
+
+if [ -n "$ISAACLAB_DRY_RUN" ]; then
+    echo python "$SCRIPT" "${ARGS[@]}"
+    exit 0
+fi
+exec python "$SCRIPT" "${ARGS[@]}"

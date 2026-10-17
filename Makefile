@@ -4,6 +4,7 @@
 TASK ?= Twowheelbalance-Twb-Twb
 PHYSICS ?= isaacsim_physx
 NUM_GPUS ?= 4
+NUM_ENVS ?= 4096
 ITERATIONS ?=3000
 
 help:  ## Display this help
@@ -11,23 +12,23 @@ help:  ## Display this help
 
 
 train: ## Train the RL agent
-	isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs 4096 physics=$(PHYSICS) --max_iterations $(ITERATIONS)
+	isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs $(NUM_ENVS) physics=$(PHYSICS) --max_iterations $(ITERATIONS)
 
 play:  ## Play/visualize the trained agent
 	isaaclab play --rl_library rsl_rl --task $(TASK) --checkpoint latest --viz kit physics=$(PHYSICS)
 
 train_verbose:  ## Train with verbose output
-	isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs 4096 physics=$(PHYSICS) --verbose --max_iterations $(ITERATIONS)
+	isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs $(NUM_ENVS) physics=$(PHYSICS) --verbose --max_iterations $(ITERATIONS)
 
 train_video:  ## Train and record a video
-	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab train --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 4096 physics=isaacsim_physx --video --video_length 1000 --video_interval 2000
+	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab train --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs $(NUM_ENVS) physics=isaacsim_physx --video --video_length 1000 --video_interval 2000
 
 train_multi:  ## Train on several GPUs of one node
-	python -m torch.distributed.run --nproc_per_node $(NUM_GPUS) --local_ranks_filter 0 --no-python \
-		isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs 4096 --max_iterations $(ITERATIONS) physics=$(PHYSICS) --distributed	
+	python -m torch.distributed.run --nnodes=1 --nproc_per_node $(NUM_GPUS) --local_ranks_filter 0 --no-python \
+		isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs $(NUM_ENVS) --max_iterations $(ITERATIONS) physics=$(PHYSICS) --distributed	
 
 play_video:  ## Play and record a video
-	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 128 physics=isaacsim_physx --video --video_length 1000 --video_interval 2000
+	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 128 physics=isaacsim_physx --video --video_length 10000 --video_interval 2000
 
 reset_logs:  ## Clear previous training
 	rm -rf ~/RL-Balancing-System/logs/

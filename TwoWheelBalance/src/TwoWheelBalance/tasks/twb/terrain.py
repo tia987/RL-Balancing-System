@@ -13,12 +13,12 @@ TWB_TERRAINS_CFG = TerrainGeneratorCfg(
     curriculum=True,
     sub_terrains={
         "flat": terrain_gen.MeshPlaneTerrainCfg(proportion=0.3),
-        # "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
-        #     proportion=0.3, noise_range=(0.0, 0.03), noise_step=0.005, border_width=0.25
-        # ),
-        # "slope": terrain_gen.HfPyramidSlopedTerrainCfg(
-        #     proportion=0.2, slope_range=(0.0, 0.25), platform_width=2.0, border_width=0.25
-        # ),
+        "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
+            proportion=0.4, noise_range=(0.0, 0.03), noise_step=0.005, border_width=0.25
+        ),
+        "slope": terrain_gen.HfPyramidSlopedTerrainCfg(
+            proportion=0.3, slope_range=(0.0, 0.25), platform_width=2.0, border_width=0.25
+        ),
         # "slope_inv": terrain_gen.HfInvertedPyramidSlopedTerrainCfg(
         #     proportion=0.2, slope_range=(0.0, 0.25), platform_width=2.0, border_width=0.25
         # ),

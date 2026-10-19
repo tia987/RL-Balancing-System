@@ -147,7 +147,7 @@ class CommandsCfg:
         heading_control_stiffness=0.5,
         debug_vis=False,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
-            lin_vel_x=(-1.5, 1.5), lin_vel_y=(0.0, 0.0), ang_vel_z=(-0.0, 0.0), heading=(-math.pi, math.pi)
+            lin_vel_x=(-1.5, 1.5), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)
         ),
     )
 
@@ -234,7 +234,7 @@ class EventCfg:
                 "x": (-0.1, 0.1), 
                 "y": (-0.1, 0.1), 
                 "z": (-0.1, 0.1), 
-                "roll": (-0.1, 0.1), 
+                "roll": (-0.1, 0.1), # Probably only yaw and pitch
                 "pitch": (-0.1, 0.1), 
                 "yaw": (-0.1, 0.1)
             },
@@ -253,7 +253,7 @@ class RewardsCfg:
     track_lin_vel_xy_exp = RewTerm(
         func=mdp.track_lin_vel_xy_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
     )
-    # @TODO:Check that this function ensures robot vertical stabilization -> Yaw rate
+    # @TODO:Check that this function ensures robot vertical stabilization -> Yaw 
     track_ang_vel_z_exp = RewTerm(
         func=mdp.track_ang_vel_z_exp, weight=0.5, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
     )
@@ -264,7 +264,7 @@ class RewardsCfg:
     # Keep base upright
     base_upright = RewTerm(
         func=mdp.flat_orientation_l2,
-        weight=-1.0,
+        weight=-0.5,
     )
     # Lower wheel velocity
     # wheel_vel = RewTerm(
@@ -282,7 +282,7 @@ class RewardsCfg:
     # Efficiency
     # Force less actions
     action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
-    # Reduce joint accleration @BRIEF: Not sure if to add in this case
+    # Reduce joint accleration @BRIEF: Not sure about adding it in this case
     # dof_acc_l2 = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7)
     
     # Failure penalty

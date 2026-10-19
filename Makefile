@@ -36,3 +36,5 @@ reset_logs:  ## Clear previous training
 tensorboard:	## Start forwarded tensorboard live
 	tensorboard --logdir logs --port 6006
 
+logs:
+	scp -r logs mlucca@129.132.39.171:.

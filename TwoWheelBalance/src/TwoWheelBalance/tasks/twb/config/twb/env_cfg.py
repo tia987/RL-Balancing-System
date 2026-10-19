@@ -149,6 +149,7 @@ class CommandsCfg:
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
             lin_vel_x=(-1.5, 1.5), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)
         ),
+        rel_heading_envs=0.5,
     )
 
 @configclass
@@ -275,7 +276,7 @@ class RewardsCfg:
     # Lower angular velocity
     base_ang_vel = RewTerm(
         func=mdp.base_ang_vel_l2,
-        weight=-0.005,
+        weight=-0.01,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
     

@@ -1,4 +1,4 @@
-.PHONE: traini train_verbose train_video play play_video tensorboard logs
+.PHONY: train train_verbose train_video play play_video tensorboard logs
 
 # VENV_ACTIVATE = .env_isaaclab/bin/activate
 TASK ?= Twowheelbalance-Twb-Twb

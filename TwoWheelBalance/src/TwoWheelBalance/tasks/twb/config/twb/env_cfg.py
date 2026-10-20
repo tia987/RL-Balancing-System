@@ -147,7 +147,7 @@ class CommandsCfg:
         heading_control_stiffness=0.5,
         debug_vis=False,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
-            lin_vel_x=(-1.5, 1.5), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)
+            lin_vel_x=(-1.0, 1.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)
         ),
     )
 
@@ -247,15 +247,15 @@ class RewardsCfg:
     """Reward terms for the MDP."""
     
     # Positive rewards - tasks
-    alive = RewTerm(func=mdp.is_alive, weight=1.0)
+    alive = RewTerm(func=mdp.is_alive, weight=0.5)
 
     # Locomotion
     track_lin_vel_xy_exp = RewTerm(
-        func=mdp.track_lin_vel_xy_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
+        func=mdp.track_lin_vel_xy_exp, weight=1.5, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
     )
     # @TODO:Check that this function ensures robot vertical stabilization -> Yaw 
     track_ang_vel_z_exp = RewTerm(
-        func=mdp.track_ang_vel_z_exp, weight=0.5, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
+        func=mdp.track_ang_vel_z_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
     )
     
     # Negative rewards - penalties
@@ -274,8 +274,8 @@ class RewardsCfg:
     # )
     # Lower angular velocity
     base_ang_vel = RewTerm(
-        func=mdp.base_ang_vel_l2,
-        weight=-0.01,
+        func=mdp.ang_vel_xy_l2,
+        weight=-0.05,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
     

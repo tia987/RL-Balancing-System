@@ -262,7 +262,7 @@ class RewardsCfg:
     #
     # Balance
     # Keep base upright
-    base_upright = RewTerm(
+    flat_orientation_l2 = RewTerm(
         func=mdp.flat_orientation_l2,
         weight=-0.5,
     )
@@ -273,7 +273,7 @@ class RewardsCfg:
     #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_wheel_joint"])},
     # )
     # Lower angular velocity
-    base_ang_vel = RewTerm(
+    ang_vel_xy_l2 = RewTerm(
         func=mdp.ang_vel_xy_l2,
         weight=-0.05,
         params={"asset_cfg": SceneEntityCfg("robot")},

@@ -1,5 +1,17 @@
 import isaaclab.terrains as terrain_gen
 from isaaclab.terrains import TerrainGeneratorCfg
+from isaaclab.terrains.height_field import hf_terrains
+from isaaclab.utils import configclass
+
+def curriculum_random_uniform_terrain(difficulty: float, cfg):
+    lo, hi = cfg.noise_range
+    return hf_terrains.random_uniform_terrain(
+        difficulty, cfg.replace(noise_range=(lo, lo+difficulty * (hi-lo)))
+    )
+
+@configclass
+class CurriculumRandomUniformTerrainCfg(terrain_gen.HfRandomUniformTerrainCfg):
+    function = curriculum_random_uniform_terrain
 
 TWB_TERRAINS_CFG = TerrainGeneratorCfg(
     size=(8.0, 8.0),
@@ -13,9 +25,14 @@ TWB_TERRAINS_CFG = TerrainGeneratorCfg(
     curriculum=True,
     sub_terrains={
         "flat": terrain_gen.MeshPlaneTerrainCfg(proportion=0.3),
-        "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
+        
+        "random_rough": CurriculumRandomUniformTerrainCfg(
             proportion=0.4, noise_range=(0.0, 0.03), noise_step=0.005, border_width=0.25
         ),
+
+        # "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
+        #     proportion=0.4, noise_range=(0.0, 0.03), noise_step=0.005, border_width=0.25
+        # ),
         "slope": terrain_gen.HfPyramidSlopedTerrainCfg(
             proportion=0.3, slope_range=(0.0, 0.25), platform_width=2.0, border_width=0.25
         ),

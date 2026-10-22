@@ -3,7 +3,7 @@
 # VENV_ACTIVATE = .env_isaaclab/bin/activate
 TASK ?= Twowheelbalance-Twb-Twb
 PHYSICS ?= isaacsim_physx
-NUM_GPUS ?= 2
+NUM_GPUS ?= 4
 NUM_ENVS ?= 4096
 ITERATIONS ?=4000
 

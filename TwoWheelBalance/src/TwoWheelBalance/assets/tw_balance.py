@@ -46,7 +46,7 @@ BALANCE_BOT_CFG = ArticulationCfg(
             effort_limit_sim=50.0,
             velocity_limit_sim=50.0,
             stiffness=0.0,
-            damping=2:wheel0.0,
+            damping=20.0,
         ),
     },
     # actuators={

@@ -154,9 +154,12 @@ class CommandsCfg:
 @configclass
 class ActionsCfg:
     """Action specifications for the MDP. Set wheel joints to rotate"""
-
+    
+    # @brief: Torque
     # @CHANGE: Reduced scale from 100 to 20
-    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=20.0)
+    # joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=20.0)
+    # @brief: Angular velocity instead of torque
+    joint_vel = mdp.JointVelocityActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=10.0)
 
 
 @configclass
@@ -342,15 +345,15 @@ class TwbEnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 2
         self.episode_length_s = 20.0
         # visualizer camera settings
-        # self.sim.default_visualizer_cfg = VisualizerCfg(eye=(8.0, 0.0, 5.0)) 
+        self.sim.default_visualizer_cfg = VisualizerCfg(eye=(8.0, 0.0, 5.0)) 
         # Visualizer to track the robot directly
-        self.viewer = ViewerCfg(
-            origin_type="asset_root",
-            asset_name="robot",
-            env_index=-1,
-            eye=(3.0, 3.0, 1.5),
-            lookat=(0.0, 0.0, 0.0),
-        )
+        # self.viewer = ViewerCfg(
+        #     origin_type="asset_root",
+        #     asset_name="robot",
+        #     env_index=-1,
+        #     eye=(3.0, 3.0, 1.5),
+        #     lookat=(0.0, 0.0, 0.0),
+        # )
         # simulation settings
         self.sim.dt = 1 / 120
         self.sim.render_interval = self.decimation

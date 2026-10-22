@@ -157,9 +157,9 @@ class ActionsCfg:
     
     # @brief: Torque
     # @CHANGE: Reduced scale from 100 to 20
-    # joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=20.0)
+    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=20.0)
     # @brief: Angular velocity instead of torque
-    joint_vel = mdp.JointVelocityActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=10.0)
+    # joint_vel = mdp.JointVelocityActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=10.0)
 
 
 @configclass
@@ -215,8 +215,7 @@ class EventCfg:
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
-            # multiplicative +-25% log-uniform: scale-invariant across robot sizes with geometric mean 1.0
-            "mass_distribution_params": (40.0,100.0),
+            "mass_distribution_params": (5.0,30.0),
             "operation": "add",
             "distribution": "log_uniform",
         },

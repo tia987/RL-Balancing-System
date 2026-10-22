@@ -39,25 +39,25 @@ BALANCE_BOT_CFG = ArticulationCfg(
         joint_pos={".*": 0.0},
         joint_vel={".*": 0.0},
     ),
-    actuators={
-        # @brief: Good for case without torque, instead use JointVelocityActionCfg in env_cfg.py
-        "wheels": ImplicitActuatorCfg(
-            joint_names_expr=[".*_wheel_joint"],
-            effort_limit_sim=50.0,
-            velocity_limit_sim=50.0,
-            stiffness=0.0,
-            damping=20.0,
-        ),
-    },
     # actuators={
-    #     # stiffness = damping = 0  ->  wheels are driven by raw torque commands
+    #     # @brief: Good for case without torque, instead use JointVelocityActionCfg in env_cfg.py
     #     "wheels": ImplicitActuatorCfg(
     #         joint_names_expr=[".*_wheel_joint"],
     #         effort_limit_sim=50.0,
     #         velocity_limit_sim=50.0,
     #         stiffness=0.0,
-    #         damping=0.0,
+    #         damping=20.0,
     #     ),
     # },
+    actuators={
+        # stiffness = damping = 0  ->  wheels are driven by raw torque commands
+        "wheels": ImplicitActuatorCfg(
+            joint_names_expr=[".*_wheel_joint"],
+            effort_limit_sim=50.0,
+            velocity_limit_sim=50.0,
+            stiffness=0.0,
+            damping=0.0,
+        ),
+    },
 )
 """Two-wheeled balancing robot (torque-controlled wheels)."""

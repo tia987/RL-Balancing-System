@@ -1,0 +1,3 @@
+No modules loaded
+python -m torch.distributed.run --nnodes=1 --nproc_per_node 4 --local_ranks_filter 0 --no-python \
+	isaaclab train --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz none --num_envs 1028 --max_iterations 4000 physics=isaacsim_physx --distributed	

@@ -26,7 +26,7 @@
       <!-- @TODO: DOES NOT COUNT FOR PERSON'S WEIGHT -->
       <mass value="120.0"/>
       <!-- solid box: I = m/12 * (a^2 + b^2) -->
-      <inertia ixx="0.02" iyy="0.02" izz="0.03" ixy="0" ixz="0" iyz="0"/>
+      <inertia ixx="7.65" iyy="7.65" izz="4.05" ixy="0" ixz="0" iyz="0"/>
     </inertial>
   </link>
 
@@ -45,7 +45,7 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <mass value="20.0"/>
       <!-- spin axis is y: iyy = m r^2 / 2, ixx = izz = m (3 r^2 + w^2) / 12 -->
-      <inertia ixx="0.002" iyy="0.004" izz="0.002" ixy="0" ixz="0" iyz="0"/>
+      <inertia ixx="0.453" iyy="0.9" izz="0.453" ixy="0" ixz="0" iyz="0"/>
     </inertial>
   </link>
 
@@ -72,8 +72,7 @@
     <inertial>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <mass value="20.0"/>
-      <inertia ixx="0.002" iyy="0.004" izz="0.002" ixy="0" ixz="0" iyz="0"/>
-    </inertial>
+      <inertia ixx="0.453" iyy="0.9" izz="0.453" ixy="0" ixz="0" iyz="0"/>    </inertial>
   </link>
 
   <joint name="right_wheel_joint" type="continuous">

@@ -5,7 +5,7 @@
 #SBATCH --nodes=1                   # Number of nodes
 #SBATCH --ntasks=16                 # Number of tasks
 #SBATCH --ntasks-per-node=16        # Number of tasks per node
-#SBATCH --gpus-per-node=4
+#SBATCH --gpus-per-node=2
 #SBATCH --mem-per-cpu=2G            # Memory per CPU
 #SBATCH --time=24:00:00             # Wall clock time limit
 #SBATCH --mail-type=END,FAIL        # Send an email when job ends
@@ -21,4 +21,4 @@ export OMNI_KIT_ACCEPT_EULA=YES
 source env.sh
 
 # Run the program
-make train_multi ITERATIONS=6000 NUM_ENVS=1028
+make train_multi ITERATIONS=4000 NUM_ENVS=2056

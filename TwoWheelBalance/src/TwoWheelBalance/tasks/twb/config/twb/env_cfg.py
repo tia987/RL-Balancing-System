@@ -21,7 +21,8 @@ from isaaclab.physics import PhysxAutoCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
 from isaaclab.terrains import TerrainImporterCfg
-from TwoWheelBalance.tasks.twb.rough_terrain import TWB_TERRAINS_CFG
+from TwoWheelBalance.tasks.twb.flat_terrain import TWB_TERRAINS_CFG
+# from TwoWheelBalance.tasks.twb.rough_terrain import TWB_TERRAINS_CFG
 # from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
 from isaaclab.utils import configclass

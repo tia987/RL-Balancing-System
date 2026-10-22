@@ -21,8 +21,7 @@ from isaaclab.physics import PhysxAutoCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
 from isaaclab.terrains import TerrainImporterCfg
-# from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG
-from TwoWheelBalance.tasks.twb.terrain import TWB_TERRAINS_CFG
+from TwoWheelBalance.tasks.twb.rough_terrain import TWB_TERRAINS_CFG
 # from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
 from isaaclab.utils import configclass
@@ -209,28 +208,32 @@ class EventCfg:
         },
     )
 
-    # @BUG: body name creates troubles
-    #
-    # add_base_mass = EventTerm(
-    #     func=mdp.randomize_rigid_body_mass,
-    #     mode="startup",
-    #     params={
-    #         "asset_cfg": SceneEntityCfg("robot", body_names="base"),
-    #         # multiplicative +-25% log-uniform: scale-invariant across robot sizes with geometric mean 1.0
-    #         "mass_distribution_params": (1 / 1.25, 1.25),
-    #         "operation": "scale",
-    #         "distribution": "log_uniform",
-    #     },
-    # )
-    
+    # @brief: Randomize the body mass between 40 and 100 kg, the robot wheel torque must be adapted to this additional mass
+    randomize_rigid_body_mass = EventTerm(
+        func=mdp.randomize_rigid_body_mass,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
+            # multiplicative +-25% log-uniform: scale-invariant across robot sizes with geometric mean 1.0
+            "mass_distribution_params": (40.0,100.0),
+            "operation": "add",
+            "distribution": "log_uniform",
+        },
+    )
+    # @brief: Shift the center of mass of the person randomly
+    person_com_offset = EventTerm(
+        func=mdp.randomize_rigid_body_com,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
+            "com_range": {"x": (-0.05, 0.05), "y": (-0.03, 0.03), "z": (0.0, 0.3)},  # m; rider sits higher
+        }
+    )
+
     reset_base = EventTerm(
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            # Cartpole example
-            # "asset_cfg": SceneEntityCfg("robot", joint_names=["cart_to_pole"]),
-            # "position_range": (-0.25 * math.pi, 0.25 * math.pi),
-            # "velocity_range": (-0.25 * math.pi, 0.25 * math.pi),
             "asset_cfg": SceneEntityCfg("robot"),
             "pose_range": {"pitch": (-0.2, 0.2)}, 
             "velocity_range": {

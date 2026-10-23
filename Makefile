@@ -30,7 +30,7 @@ train_multi:  ## Train on several GPUs of one node
 play_video:  ## Play and record a video
 	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 128 physics=isaacsim_physx --video --video_length 10000 --video_interval 2000
 
-video_arrow:
+video_arrow: ## Add indication arrows to recording
 	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 32 physics=isaacsim_physx --video --video_length 1200 env.commands.base_velocity.debug_vis=True  env.commands.base_velocity.heading_command=False  env.commands.base_velocity.rel_standing_envs=0.0 'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' env.observations.policy.enable_corruption=False
 
 reset_logs:  ## Clear previous training

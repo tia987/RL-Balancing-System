@@ -209,26 +209,26 @@ class EventCfg:
         },
     )
 
-    # # @brief: Randomize the body mass between 40 and 100 kg, the robot wheel torque must be adapted to this additional mass
-    # randomize_rigid_body_mass = EventTerm(
-    #     func=mdp.randomize_rigid_body_mass,
-    #     mode="startup",
-    #     params={
-    #         "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
-    #         "mass_distribution_params": (5.0,30.0),
-    #         "operation": "add",
-    #         "distribution": "log_uniform",
-    #     },
-    # )
-    # # @brief: Shift the center of mass of the person randomly
-    # person_com_offset = EventTerm(
-    #     func=mdp.randomize_rigid_body_com,
-    #     mode="startup",
-    #     params={
-    #         "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
-    #         "com_range": {"x": (-0.05, 0.05), "y": (-0.03, 0.03), "z": (0.0, 0.3)},  # m; rider sits higher
-    #     }
-    # )
+    # @brief: Randomize the body mass between 40 and 100 kg, the robot wheel torque must be adapted to this additional mass
+    randomize_rigid_body_mass = EventTerm(
+        func=mdp.randomize_rigid_body_mass,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
+            "mass_distribution_params": (5.0,30.0),
+            "operation": "add",
+            "distribution": "log_uniform",
+        },
+    )
+    # @brief: Shift the center of mass of the person randomly
+    person_com_offset = EventTerm(
+        func=mdp.randomize_rigid_body_com,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
+            "com_range": {"x": (-0.05, 0.05), "y": (-0.03, 0.03), "z": (0.0, 0.3)},  # m; rider sits higher
+        }
+    )
 
     reset_base = EventTerm(
         func=mdp.reset_root_state_uniform,
@@ -326,7 +326,7 @@ class CurriculumCfg:
 
 @configclass
 class TwbEnvCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the cart-pole environment."""
+    """Configuration for the environment."""
 
     # Scene settings
     scene: TwbSceneCfg = TwbSceneCfg(num_envs=4096, env_spacing=2.5)

@@ -216,6 +216,7 @@ class EventCfg:
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
             "mass_distribution_params": (5.0,30.0),
+            # "mass_distribution_params": (40.0,90.0),
             "operation": "add",
             "distribution": "log_uniform",
         },

@@ -10,6 +10,7 @@ from isaaclab_rl.rsl_rl import RslRlMLPModelCfg, RslRlOnPolicyRunnerCfg, RslRlPp
 
 @configclass
 class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
+    # clip_actions = 2.5
     num_steps_per_env = 24
     max_iterations = 1500
     save_interval = 50

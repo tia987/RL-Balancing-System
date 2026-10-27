@@ -37,7 +37,7 @@ reset_logs:  ## Clear previous training
 	rm -rf ~/RL-Balancing-System/logs/
 
 tensorboard:	## Start forwarded tensorboard live
-	tensorboard --logdir logs --port 6006
+	tensorboard --logdir logs/twb --port 6006
 
 logs: ## Save logs on pc lab
 	scp -r logs mlucca@129.132.39.171:.

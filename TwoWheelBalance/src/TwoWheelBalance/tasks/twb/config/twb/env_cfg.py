@@ -175,24 +175,31 @@ class ObservationsCfg:
         # @NOTE: probably base_lin_vel to remove due to hardware
         base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
-        # base_ang_vel = ObsTerm(func=mdp.base_ang_vel) # Case without noise
+
         projected_gravity = ObsTerm(func=mdp.projected_gravity)
-        # TODO: check difference between with and without _rel, @note: anymal doesn't use _rel
-        # setup for the moment without noise
-        #
+
         # joint_pos = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel = ObsTerm(func=mdp.joint_vel_rel)
+
         # @ADDED: previous action, from anymal
         actions = ObsTerm(func=mdp.last_action)
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
 
         def __post_init__(self) -> None:
-            self.enable_corruption = True # Toggle noise # Toggle noise
+            self.enable_corruption = True # Toggle noise 
+            self.concatenate_terms = True
+
+    @configclass
+    class PrivilegedCfg(ObsGroup):
+        rider_mass = ObsTerm(func=mdp.rider_mass_obs)
+
+        def __post_init__(self) -> None:
+            self.enable_corruption = False # Toggle noise
             self.concatenate_terms = True
 
     # observation groups
     policy: PolicyCfg = PolicyCfg()
-
+    privileged: PrivilegedCfg = PrivilegedCfg()
 
 @configclass
 class EventCfg:
@@ -209,16 +216,14 @@ class EventCfg:
         },
     )
 
-    # @brief: Randomize the body mass between 40 and 100 kg, the robot wheel torque must be adapted to this additional mass
-    randomize_rigid_body_mass = EventTerm(
-        func=mdp.randomize_rigid_body_mass,
+    # @brief: slowly increases body mass of rider from 0-5 to 40-120
+    rider_mass = EventTerm(
+        func=mdp.rider_mass_curriculum,
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
-            "mass_distribution_params": (5.0,30.0),
-            # "mass_distribution_params": (40.0,90.0),
-            "operation": "add",
-            "distribution": "log_uniform",
+            "mass_start": (0.0, 5.0),
+            "mass_end": (40.0, 120.0),
         },
     )
     # @brief: Shift the center of mass of the person randomly
@@ -320,6 +325,10 @@ class CurriculumCfg:
     terrain_levels = CurrTerm(
         func=mdp.terrain_levels_vel,
     )
+    rider_mass = CurrTerm(
+        func=mdp.rider_mass_mean,
+    )
+    rider_gate = CurrTerm(func=mdp.rider_mass_gate, params={"start_kg": 5.0, "max_kg": 120.0, "step_kg": 1.0})
 
 ##
 # Environment configuration

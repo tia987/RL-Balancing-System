@@ -76,14 +76,54 @@ def rider_mass_curriculum(env, env_ids: torch.Tensor | None, asset_cfg: SceneEnt
     inertias[ids[:, None], bids] = env._twb_base_inertias[ids][:, bids] * ratio
     _set(asset, masses, inertias, ids_cpu)
 
-def rider_mass_gate( env, env_ids: torch.Tensor, start_kg: float = 10.0, max_kg: float = 90.0, step_kg: float = 1.0, max_fall_rate: float = 0.05, fall_term: str = "bad_orientation"):
+def _episode_success(env, env_ids, command_name, track_term):
+    """Per-env 0..1 score of the episodes that are ending now (called before the managers reset).
+
+    Preferred: exactly the definition behind TensorBoard's Metrics/success_rate (UniformVelocityCommand:
+    episode-mean xy error < vel_xy_success_threshold AND yaw error < vel_yaw_success_threshold).
+    Fallback (older Isaac Lab without those buffers): normalised velocity-tracking reward of the episode.
+    """
+    term = env.command_manager.get_term(command_name)
+    if all(hasattr(term, a) for a in ("_error_xy_sum", "_error_yaw_sum", "_step_count")):
+        n = term._step_count[env_ids].clamp_min(1.0)
+        ok_xy = term._error_xy_sum[env_ids] / n < term.cfg.vel_xy_success_threshold
+        ok_yaw = term._error_yaw_sum[env_ids] / n < term.cfg.vel_yaw_success_threshold
+        return (ok_xy & ok_yaw).float()
+    rm = env.reward_manager
+    ep_sum = rm._episode_sums[track_term][env_ids]
+    return (ep_sum / (rm.get_term_cfg(track_term).weight * env.max_episode_length_s)).clamp(0.0, 1.0)
+
+
+
+def rider_mass_gate( env, env_ids: torch.Tensor, start_kg: float = 10.0, max_kg: float = 90.0, step_kg: float = 1.0, every_steps: int = 240, min_episodes: int = 150, heavy_frac: float = 0.7, up_success: float = 0.85, down_success: float = 0.6, max_fall_rate: float = 0.05, command_name: str = "base_velocity", track_term: str = "track_lin_vel_xy_exp", fall_term: str = "bad_orientation"):
     if not hasattr(env, "rider_mass_max"):
         env.rider_mass_max = start_kg
-    if env_ids is not None and len(env_ids) > 0:
-        falls = env.termination_manager.get_term(fall_term)[env_ids].float().mean().item()
-        if falls < max_fall_rate:
+    env._gate_n, env._gate_succ, env._gate_falls = 0, 0.0, 0.0
+    env._gate_last = env.common_step_counter
+    if isinstance(env_ids, slice) or env_ids is None:
+        env_ids = torch.arange(env.num_envs, device=env.device)
+    if len(env_ids) > 0 and hasattr(env, "rider_mass"):
+        heavy = env.rider_mass[env_ids] >= heavy_frac * env.rider_mass_max   # mass of the episode that ends now
+        ids = env_ids[heavy]
+        if len(ids) > 0:
+            env._gate_n += len(ids)
+            env._gate_succ += _episode_success(env, ids, command_name, track_term).sum().item()
+            env._gate_falls += env.termination_manager.get_term(fall_term)[ids].float().sum().item()
+    if env.common_step_counter - env._gate_last >= every_steps and env._gate_n >= min_episodes:
+        succ = env._gate_succ / env._gate_n
+        fall_rate = env._gate_falls / env._gate_n
+        if succ > up_success and fall_rate < max_fall_rate:
             env.rider_mass_max = min(env.rider_mass_max + step_kg, max_kg)
-    return torch.tensor(env.rider_mass_max)
+        elif succ < down_success:
+            env.rider_mass_max = max(env.rider_mass_max - step_kg, start_kg)
+        env.rider_mass_gate_score = succ                        # for logging, see rider_gate_score
+        env._gate_n, env._gate_succ, env._gate_falls = 0, 0.0, 0.0
+        env._gate_last = env.common_step_counter
+    return torch.tensor(float(env.rider_mass_max))
+
+def rider_gate_score(env, env_ids: torch.Tensor) -> torch.Tensor:
+    """Logging only: success rate of the heavy-rider episodes at the last gate decision (Curriculum/<term>)."""
+    return torch.tensor(float(getattr(env, "rider_mass_gate_score", 0.0)))
 
 def rider_mass_obs(env, scale: float=0.01) -> torch.Tensor:
     """Rider mass per env (scaled: 100 kg -> 1.0). Privileged: only the teacher / critic may see it."""

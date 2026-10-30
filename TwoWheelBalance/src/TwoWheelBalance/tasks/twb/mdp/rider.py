@@ -94,31 +94,57 @@ def _episode_success(env, env_ids, command_name, track_term):
     return (ep_sum / (rm.get_term_cfg(track_term).weight * env.max_episode_length_s)).clamp(0.0, 1.0)
 
 
+def rider_mass_gate(
+    env,
+    env_ids: torch.Tensor,
+    start_kg: float = 10.0,
+    max_kg: float = 90.0,
+    step_kg: float = 2.0,
+    every_steps: int = 240,
+    min_episodes: int = 150,
+    heavy_frac: float = 0.7,
+    up_success: float = 0.85,
+    down_success: float = 0.6,
+    max_fall_rate: float = 0.05,
+    command_name: str = "base_velocity",
+    track_term: str = "track_lin_vel_xy_exp",
+    fall_term: str = "bad_orientation",
+):
+    """Performance-gated maximum rider mass [kg] (use together with rider_mass_curriculum).
 
-def rider_mass_gate( env, env_ids: torch.Tensor, start_kg: float = 10.0, max_kg: float = 90.0, step_kg: float = 1.0, every_steps: int = 240, min_episodes: int = 150, heavy_frac: float = 0.7, up_success: float = 0.85, down_success: float = 0.6, max_fall_rate: float = 0.05, command_name: str = "base_velocity", track_term: str = "track_lin_vel_xy_exp", fall_term: str = "bad_orientation"):
+    - Isaac Lab calls curriculum terms at EVERY env step that has resets, so the gate only collects the
+      episodes that end and decides every `every_steps` env steps (240 = 10 PPO iterations at 24 steps/iter).
+    - Only the "heavy" episodes count: rider mass >= heavy_frac * current max. Light riders are easy and
+      would hide the failures; it also removes most of the lag from 20 s long episodes.
+    - success = same as Metrics/success_rate (velocity tracked well over the episode); falls = bad_orientation.
+    - up   : success > up_success and falls < max_fall_rate  -> max + step_kg
+      down : success < down_success                          -> max - step_kg (not below start_kg)
+    """
     if not hasattr(env, "rider_mass_max"):
         env.rider_mass_max = start_kg
-    env._gate_n, env._gate_succ, env._gate_falls = 0, 0.0, 0.0
-    env._gate_last = env.common_step_counter
+        env._gate_stats = torch.zeros(3, device=env.device)      # [n heavy episodes, successes, falls]
+        env._gate_last = env.common_step_counter
     if isinstance(env_ids, slice) or env_ids is None:
         env_ids = torch.arange(env.num_envs, device=env.device)
     if len(env_ids) > 0 and hasattr(env, "rider_mass"):
-        heavy = env.rider_mass[env_ids] >= heavy_frac * env.rider_mass_max   # mass of the episode that ends now
-        ids = env_ids[heavy]
-        if len(ids) > 0:
-            env._gate_n += len(ids)
-            env._gate_succ += _episode_success(env, ids, command_name, track_term).sum().item()
-            env._gate_falls += env.termination_manager.get_term(fall_term)[ids].float().sum().item()
-    if env.common_step_counter - env._gate_last >= every_steps and env._gate_n >= min_episodes:
-        succ = env._gate_succ / env._gate_n
-        fall_rate = env._gate_falls / env._gate_n
-        if succ > up_success and fall_rate < max_fall_rate:
-            env.rider_mass_max = min(env.rider_mass_max + step_kg, max_kg)
-        elif succ < down_success:
-            env.rider_mass_max = max(env.rider_mass_max - step_kg, start_kg)
-        env.rider_mass_gate_score = succ                        # for logging, see rider_gate_score
-        env._gate_n, env._gate_succ, env._gate_falls = 0, 0.0, 0.0
-        env._gate_last = env.common_step_counter
+        # masks instead of boolean indexing: no GPU->CPU sync at every step (keeps training fast)
+        heavy = (env.rider_mass[env_ids] >= heavy_frac * env.rider_mass_max).float()
+        succ = _episode_success(env, env_ids, command_name, track_term)
+        falls = env.termination_manager.get_term(fall_term)[env_ids].float()
+        env._gate_stats += torch.stack([heavy.sum(), (heavy * succ).sum(), (heavy * falls).sum()])
+    if env.common_step_counter - env._gate_last >= every_steps:
+        n, n_succ, n_falls = env._gate_stats.tolist()                # one sync per decision window
+        if n >= min_episodes:
+            succ_rate, fall_rate = n_succ / n, n_falls / n
+            if succ_rate > up_success and fall_rate < max_fall_rate:
+                env.rider_mass_max = min(env.rider_mass_max + step_kg, max_kg)
+            elif succ_rate < down_success:
+                env.rider_mass_max = max(env.rider_mass_max - step_kg, start_kg)
+            env.rider_mass_gate_score = succ_rate                     # for logging, see rider_gate_score
+            env._gate_stats.zero_()
+            env._gate_last = env.common_step_counter
+        else:                                                         # not enough heavy episodes yet:
+            env._gate_last += every_steps // 4                        # keep counting, check again a bit later
     return torch.tensor(float(env.rider_mass_max))
 
 def rider_gate_score(env, env_ids: torch.Tensor) -> torch.Tensor:

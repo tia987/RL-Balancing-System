@@ -219,7 +219,7 @@ class EventCfg:
     # @brief: slowly increases body mass of rider from 0-5 to 40-120
     rider_mass = EventTerm(
         func=mdp.rider_mass_curriculum,
-        mode="startup",
+        mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
             "mass_start": (0.0, 5.0),

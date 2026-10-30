@@ -2,18 +2,33 @@ import torch
 
 from isaaclab.managers import SceneEntityCfg
 
+def _to_torch(x) -> torch.Tensor:
+    """Isaac Lab 3.0 may return Warp arrays instead of torch tensors."""
+    if isinstance(x, torch.Tensor):
+        return x
+    import warp as wp
+    return wp.to_torch(x)
+
 def _view(asset):
     view = getattr(asset, "root_physx_view", None)
     return view if view is not None else asset.root_view
 
 def _get_masses(asset) -> torch.Tensor:
-    return _view(asset)._get_masses.clone()
+    return _to_torch(_view(asset).get_masses()).clone()
 
 def _get_inertias(asset) -> torch.Tensor:
-    return _view(asset)._get_inertias.clone()
+    return _to_torch(_view(asset).get_inertias()).clone()
 
 def _set(asset, masses, inertias, env_ids_cpu):
-    _view()
+    view = _view(asset)
+    try:
+        view.set_masses(masses, env_ids_cpu)
+        view.set_inertias(inertias, env_ids_cpu)
+    except Exception:                                           # this backend wants Warp arrays
+        import warp as wp
+        ids = wp.from_torch(env_ids_cpu.to(torch.int32))
+        view.set_masses(wp.from_torch(masses.contiguous()), ids)
+        view.set_inertias(wp.from_torch(inertias.contiguous()), ids)
 
 def rider_mass_curriculum(env, env_ids: torch.Tensor | None, asset_cfg: SceneEntityCfg, mass_start: tuple[float, float] = (5.0, 30.0), mass_end: tuple[float, float] = (40.0, 120.0), ramp_steps: int=48_000):
     """Add a random rider mass [kg] to the bodies in asset_cfg (e.g. base_link) for the resetting envs.
@@ -29,7 +44,7 @@ def rider_mass_curriculum(env, env_ids: torch.Tensor | None, asset_cfg: SceneEnt
         env_ids = torch.arange(env.num_envs, device=env.device)
 
     # On the first call, initialise to the environment the rider's mass
-    if not hasattr(env. "rider_mass"):
+    if not hasattr(env, "rider_mass"):
         env.rider_mass = torch.zeros(env.num_envs, device=env.device)
         env._twb_base_masses = _get_masses(asset)
         env._twb_base_inertias = _get_inertias(asset)
@@ -43,22 +58,26 @@ def rider_mass_curriculum(env, env_ids: torch.Tensor | None, asset_cfg: SceneEnt
         hi = mass_start[1] + a * (mass_end[1] - mass_start[1])
     hi = max(hi, lo)
 
-    m = torch.empty(len(env_ids), device==env.device).uniform_(lo, hi)
+    m = torch.empty(len(env_ids), device=env.device).uniform_(lo, hi)
     env.rider_mass[env_ids] = m
 
     ids_cpu = env_ids.cpu()
-    body_ids = asset_cfg.body_ids if isistance(asset_cfg.body_ids, list) else list(range(env._twb_base_masses.shape[1]))
-    masses = env._twb_base_inertias.clone()
-    base = env._twb_base_masses[ids_cpu][:, body_ids]
-    new = base + m.cpu().unsqueeze(1)
-    masses[ids_cpu[:, None], torch.tensor(body_ids)] = new
+    dev = env._twb_base_masses.device                         # CPU or GPU, depending on the backend
+    ids = env_ids.to(dev)
+    body_ids = asset_cfg.body_ids if isinstance(asset_cfg.body_ids, list) else list(range(env._twb_base_masses.shape[1]))
+    bids = torch.tensor(body_ids, device=dev)
+    masses = env._twb_base_masses.clone()
+    inertias = env._twb_base_inertias.clone()
+    base = env._twb_base_masses[ids][:, bids]
+    new = base + m.to(dev).unsqueeze(1)
+    masses[ids[:, None], bids] = new
     # scale inertia with mass
     ratio = (new / base).unsqueeze(-1)
-    inertias[ids_cpu[:, None], torch.tensor(body_ids)] = env._twb_base_inertias[ids_cpu][:, body_ids] * ratio
+    inertias[ids[:, None], bids] = env._twb_base_inertias[ids][:, bids] * ratio
     _set(asset, masses, inertias, ids_cpu)
 
 def rider_mass_gate( env, env_ids: torch.Tensor, start_kg: float = 10.0, max_kg: float = 90.0, step_kg: float = 1.0, max_fall_rate: float = 0.05, fall_term: str = "bad_orientation"):
-    if not hasattr(env, rider_mass_max):
+    if not hasattr(env, "rider_mass_max"):
         env.rider_mass_max = start_kg
     if env_ids is not None and len(env_ids) > 0:
         falls = env.termination_manager.get_term(fall_term)[env_ids].float().mean().item()
@@ -66,10 +85,10 @@ def rider_mass_gate( env, env_ids: torch.Tensor, start_kg: float = 10.0, max_kg:
             env.rider_mass_max = min(env.rider_mass_max + step_kg, max_kg)
     return torch.tensor(env.rider_mass_max)
 
-def rider_mass_obs(env, scale: flaot=0.01) -> torch.Tensor:
+def rider_mass_obs(env, scale: float=0.01) -> torch.Tensor:
     """Rider mass per env (scaled: 100 kg -> 1.0). Privileged: only the teacher / critic may see it."""
     if not hasattr(env, "rider_mass"):
-        return torch.zeros(env.num_envs, 1 device=env.device)
+        return torch.zeros(env.num_envs, 1, device=env.device)
     return (env.rider_mass * scale).unsqueeze(1)
 
 def rider_mass_mean(env, env_ids: torch.Tensor) -> torch.Tensor:

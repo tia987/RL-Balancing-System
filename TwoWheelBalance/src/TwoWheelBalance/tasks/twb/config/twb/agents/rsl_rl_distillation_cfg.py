@@ -16,13 +16,13 @@ class DistillationRunnerCfg(RslRlDistillationRunnerCfg):
     experiment_name = "twb"
     obs_groups = {"student": ["policy"], "teacher": ["policy"]}
     student = RslRlMLPModelCfg(
-        hidden_dims=[32, 32],
+            hidden_dims=[32, 32], # TODO: CHANGE LATER
         activation="elu",
         obs_normalization=False,
         distribution_cfg=RslRlMLPModelCfg.GaussianDistributionCfg(init_std=1.0),
     )
     teacher = RslRlMLPModelCfg(
-        hidden_dims=[32, 32],
+        hidden_dims=[32, 32], # TODO: CHANGE LATER
         activation="elu",
         obs_normalization=False,
         distribution_cfg=RslRlMLPModelCfg.GaussianDistributionCfg(init_std=0.0),

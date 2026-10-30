@@ -53,8 +53,8 @@ BALANCE_BOT_CFG = ArticulationCfg(
         # stiffness = damping = 0  ->  wheels are driven by raw torque commands
         "wheels": ImplicitActuatorCfg(
             joint_names_expr=[".*_wheel_joint"],
-            effort_limit_sim=50.0,
-            velocity_limit_sim=50.0,
+            effort_limit_sim=144.0, # 6 N·m motor × 24 gear ratio (use ~125 to include gearbox losses)
+            velocity_limit_sim=20.0, # 20 km/h
             stiffness=0.0,
             damping=0.0,
         ),

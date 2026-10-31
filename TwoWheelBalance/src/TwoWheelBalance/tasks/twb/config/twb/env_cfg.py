@@ -328,7 +328,7 @@ class CurriculumCfg:
     rider_mass = CurrTerm(
         func=mdp.rider_mass_mean,
     )
-    rider_gate = CurrTerm(func=mdp.rider_mass_gate, params={"start_kg": 5.0, "max_kg": 120.0, "step_kg": 1.0})
+    rider_gate = CurrTerm(func=mdp.rider_mass_gate, params={"start_kg": 5.0, "max_kg": 120.0, "step_kg": 2.0})
     rider_gate_score = CurrTerm(func=mdp.rider_gate_score)
 
 ##

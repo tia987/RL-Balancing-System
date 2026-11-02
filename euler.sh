@@ -23,4 +23,6 @@ source env.sh
 # Run the program
 make train_multi ITERATIONS=4000 NUM_ENVS=1024
 # make play_video
-make video_arrow
+make video_arrow RIDER_MASS=0
+make video_arrow RIDER_MASS=50
+make video_arrow RIDER_MASS=100

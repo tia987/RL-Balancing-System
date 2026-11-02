@@ -6,6 +6,7 @@ PHYSICS ?= isaacsim_physx
 NUM_GPUS ?= 4
 NUM_ENVS ?= 4096
 ITERATIONS ?=4000
+RIDER_MASS ?= 100
 
 help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[.a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
@@ -31,7 +32,7 @@ play_video:  ## Play and record a video
 	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 128 physics=isaacsim_physx --video --video_length 10000 --video_interval 2000
 
 video_arrow: ## Add indication arrows to recording
-	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 32 physics=isaacsim_physx --video --video_length 1200 env.commands.base_velocity.debug_vis=True  env.commands.base_velocity.heading_command=False  env.commands.base_velocity.rel_standing_envs=0.0 'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' env.observations.policy.enable_corruption=False
+	HEADLESS=1 ENABLE_CAMERAS=1 TWB_OVERLAY=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 32 physics=isaacsim_physx --video --video_length 1200 env.commands.base_velocity.debug_vis=True  env.commands.base_velocity.heading_command=False  env.commands.base_velocity.rel_standing_envs=0.0 'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' env.observations.policy.enable_corruption=False 'env.events.rider_mass.params.mass_start=[$(RIDER_MASS),$(RIDER_MASS)]'
 
 reset_logs:  ## Clear previous training
 	rm -rf ~/RL-Balancing-System/logs/

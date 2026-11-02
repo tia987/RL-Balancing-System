@@ -289,7 +289,7 @@ class RewardsCfg:
     # Lower angular velocity
     ang_vel_xy_l2 = RewTerm(
         func=mdp.ang_vel_xy_l2,
-        weight=-0.05,
+        weight=-0.075,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
     

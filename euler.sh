@@ -22,5 +22,5 @@ source env.sh
 
 # Run the program
 make train_multi ITERATIONS=4000 NUM_ENVS=1024
-make play_video
+# make play_video
 make video_arrow

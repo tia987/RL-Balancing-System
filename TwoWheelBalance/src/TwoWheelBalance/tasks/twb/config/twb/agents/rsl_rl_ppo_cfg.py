@@ -10,12 +10,12 @@ from isaaclab_rl.rsl_rl import RslRlMLPModelCfg, RslRlOnPolicyRunnerCfg, RslRlPp
 
 @configclass
 class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
-    # clip_actions = 7.2
+    clip_actions = 7.2
     num_steps_per_env = 24
     max_iterations = 1500
     save_interval = 50
     experiment_name = "twb"
-    obs_groups = {"actor": ["policy"], "critic": ["policy", "privileged"]}
+    obs_groups = {"actor": ["policy", "privileged"], "critic": ["policy", "privileged"]}
     actor = RslRlMLPModelCfg(
         hidden_dims=[128, 128, 128],
         activation="elu",

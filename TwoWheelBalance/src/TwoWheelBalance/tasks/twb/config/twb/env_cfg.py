@@ -159,7 +159,7 @@ class ActionsCfg:
     
     # @brief: Torque
     # @CHANGE: Reduced scale from 100 to 20
-    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=15.0)
+    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=20.0)
     # @brief: Angular velocity instead of torque
     # joint_vel = mdp.JointVelocityActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=10.0)
 

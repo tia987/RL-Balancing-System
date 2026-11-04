@@ -15,6 +15,7 @@ from . import agents
 gym.register(
     id="Twowheelbalance-Twb-Twb",
     entry_point="TwoWheelBalance.tasks.twb.twb_env:TwbEnv",
+    # entry_point="isaaclab.envs:ManagerBasedRLEnv", # Old setup without visualizations
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": f"{__name__}.env_cfg:TwbEnvCfg",

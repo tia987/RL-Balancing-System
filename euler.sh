@@ -26,3 +26,6 @@ make train_multi ITERATIONS=4000 NUM_ENVS=1024
 make video_arrow RIDER_MASS=0
 make video_arrow RIDER_MASS=50
 make video_arrow RIDER_MASS=100
+make video_terrain TERRAIN=flat
+make video_terrain TERRAIN=random_rough
+make video_terrain TERRAIN=slope       # pyramid: robot starts on top, drives downhill

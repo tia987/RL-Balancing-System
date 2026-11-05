@@ -158,8 +158,8 @@ class ActionsCfg:
     """Action specifications for the MDP. Set wheel joints to rotate"""
     
     # @brief: Torque
-    # @CHANGE: Reduced scale from 100 to 20
-    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=20.0)
+    # @CHANGE: Reduced scale from 100 to 10
+    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=10.0)
     # @brief: Angular velocity instead of torque
     # joint_vel = mdp.JointVelocityActionCfg(asset_name="robot", joint_names=[".*_wheel_joint"], scale=10.0)
 
@@ -221,11 +221,11 @@ class EventCfg:
     # @brief: slowly increases body mass of rider from 0-5 to 40-120
     rider_mass = EventTerm(
         func=mdp.rider_mass_curriculum,
-        mode="reset",
+        mode="startup", # TODO: change back eventually to reset
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
             "mass_start": (0.0, 5.0),
-            "mass_end": (40.0, 120.0),
+            "mass_end": (40.0, 100.0), # TODO: Reincrement at 120
         },
     )
     # @brief: Shift the center of mass of the person randomly
@@ -330,8 +330,12 @@ class CurriculumCfg:
     rider_mass = CurrTerm(
         func=mdp.rider_mass_mean,
     )
-    rider_gate = CurrTerm(func=mdp.rider_mass_gate, params={"start_kg": 5.0, "max_kg": 120.0, "step_kg": 2.0})
-    rider_gate_score = CurrTerm(func=mdp.rider_gate_score)
+    rider_gate = CurrTerm(
+            func=mdp.rider_mass_gate, params={"start_kg": 5.0, "max_kg": 120.0, "step_kg": 2.0}
+    )
+    rider_gate_score = CurrTerm(
+            func=mdp.rider_gate_score
+    )
 
 ##
 # Environment configuration

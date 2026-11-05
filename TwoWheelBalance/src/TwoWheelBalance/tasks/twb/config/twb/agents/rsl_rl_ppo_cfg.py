@@ -10,7 +10,7 @@ from isaaclab_rl.rsl_rl import RslRlMLPModelCfg, RslRlOnPolicyRunnerCfg, RslRlPp
 
 @configclass
 class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
-    # clip_actions = 7.2
+    clip_actions = 14.4
     num_steps_per_env = 24
     max_iterations = 1500
     save_interval = 50
@@ -20,7 +20,7 @@ class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
         hidden_dims=[128, 128, 128],
         activation="elu",
         obs_normalization=False,
-        distribution_cfg=RslRlMLPModelCfg.GaussianDistributionCfg(init_std=1.0),
+        distribution_cfg=RslRlMLPModelCfg.GaussianDistributionCfg(init_std=2.0), # TODO: Change back to 1 if not working
     )
     critic = RslRlMLPModelCfg(
         hidden_dims=[128, 128, 128],

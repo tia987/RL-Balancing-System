@@ -221,11 +221,11 @@ class EventCfg:
     # @brief: slowly increases body mass of rider from 0-5 to 40-120
     rider_mass = EventTerm(
         func=mdp.rider_mass_curriculum,
-        mode="startup", # TODO: change back eventually to reset
+        mode="reset", # TODO: change back eventually to reset
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
-            "mass_start": (0.0, 5.0),
-            "mass_end": (40.0, 100.0), # TODO: Reincrement at 120
+            "mass_start": (0.0, 10.0),
+            "mass_end": (40.0, 120.0), # TODO: Reincrement at 120
         },
     )
     # @brief: Shift the center of mass of the person randomly
@@ -331,7 +331,7 @@ class CurriculumCfg:
         func=mdp.rider_mass_mean,
     )
     rider_gate = CurrTerm(
-            func=mdp.rider_mass_gate, params={"start_kg": 5.0, "max_kg": 120.0, "step_kg": 2.0}
+            func=mdp.rider_mass_gate, params={"start_kg": 5.0, "max_kg": 120.0, "step_kg": 5.0}
     )
     rider_gate_score = CurrTerm(
             func=mdp.rider_gate_score

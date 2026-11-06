@@ -98,7 +98,7 @@ def rider_mass_gate(
     env,
     env_ids: torch.Tensor,
     start_kg: float = 10.0,
-    max_kg: float = 90.0,
+    max_kg: float = 120.0,
     step_kg: float = 2.0,
     every_steps: int = 240,
     min_episodes: int = 150,

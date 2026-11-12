@@ -34,7 +34,8 @@ train_video:  ## Train and record a video
 
 train_multi:  ## Train on several GPUs of one node
 	python -m torch.distributed.run --nnodes=1 --nproc_per_node $(NUM_GPUS) --local_ranks_filter 0 --no-python \
-		isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs $(NUM_ENVS) --max_iterations $(ITERATIONS) physics=$(PHYSICS) --distributed
+		isaaclab train --rl_library rsl_rl --task $(TASK) --viz none --num_envs $(NUM_ENVS) --max_iterations $(ITERATIONS) physics=$(PHYSICS) --distributed \
+		# --checkpoint logs/rsl_rl/twb/12_baseline/model_1500.pt
 
 play_video:  ## Play and record a video
 	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task Twowheelbalance-Twb-Twb --viz kit --num_envs 128 physics=isaacsim_physx --video --video_length 10000 --video_interval 2000

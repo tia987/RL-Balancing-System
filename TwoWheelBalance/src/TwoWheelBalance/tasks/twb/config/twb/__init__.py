@@ -24,3 +24,16 @@ gym.register(
         "rsl_rl_distillation_cfg_entry_point": f"{agents.__name__}.rsl_rl_distillation_cfg:DistillationRunnerCfg",
     },
 )
+
+# Shared-control baseline: rider body on a spring-damper hip joint, leans to drive (see env_cfg_rider.py)
+gym.register(
+    id="Twowheelbalance-Twb-Rider",
+    entry_point="TwoWheelBalance.tasks.twb.twb_env:TwbEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.env_cfg_rider:TwbRiderEnvCfg",
+        "default_agent": "rsl_rl",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_rider_cfg:PPORunnerRiderCfg",
+    },
+)
+

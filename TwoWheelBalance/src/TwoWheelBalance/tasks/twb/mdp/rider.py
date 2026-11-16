@@ -75,6 +75,10 @@ def rider_mass_curriculum(env, env_ids: torch.Tensor | None, asset_cfg: SceneEnt
     ratio = (new / base).unsqueeze(-1)
     inertias[ids[:, None], bids] = env._twb_base_inertias[ids][:, bids] * ratio
     _set(asset, masses, inertias, ids_cpu)
+    # keep our own copy of the current body masses (used by balance_error): rows of the robots that were just reset
+    if not hasattr(env, "_twb_masses"):
+        env._twb_masses = env._twb_base_masses.clone().to(env.device)
+    env._twb_masses[env_ids[:, None], bids.to(env.device)] = new.to(env.device)
 
 def _episode_success(env, env_ids, command_name, track_term):
     """Per-env 0..1 score of the episodes that are ending now (called before the managers reset).
@@ -162,3 +166,79 @@ def rider_mass_mean(env, env_ids: torch.Tensor) -> torch.Tensor:
     if not hasattr(env, "rider_mass"):
         return torch.tensor(0.0)
     return env.rider_mass.mean()
+
+def rider_com_obs(env, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot", body_names="base_link"), scale: float = 10.0) -> torch.Tensor:
+    """Centre-of-mass offset of the body with the rider: x (fore-aft), y (sideways), z (up), in m * scale (0.1 m -> 1.0).
+
+    Privileged, like rider_mass_obs: a real robot cannot measure it directly. It is the value set by the
+    person_com_offset event (randomize_rigid_body_com). A robot whose CoM is 3 cm in front of / behind the axle has to
+    stand tilted by 3-5 degrees to balance; without this number (or a memory) the policy cannot tell that tilt apart
+    from "I am accelerating", and drives too slow or too fast.
+    """
+    asset = env.scene[asset_cfg.name]
+    com = asset.data.body_com_pose_b
+    com = com.torch if hasattr(com, "torch") else com
+    body = asset_cfg.body_ids[0] if isinstance(asset_cfg.body_ids, list) else 0
+    return com[:, body, :3] * scale
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Balance pose: where the chair has to stand so that it does not fall, for THIS rider
+# ----------------------------------------------------------------------------------------------------------------------
+def _t(x):
+    """Isaac Lab 3.0 data fields are proxy arrays with a .torch view."""
+    return x.torch if hasattr(x, "torch") else x
+
+
+def _body_masses(env, asset) -> torch.Tensor:
+    """Current mass of every body, shape (num_envs, num_bodies), on env.device."""
+    if hasattr(env, "_twb_masses"):
+        return env._twb_masses
+    return _t(asset.data.body_mass).to(env.device)
+
+
+def balance_error(env, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"), wheel_bodies: str = ".*_wheel") -> torch.Tensor:
+    """Angle [rad] between "straight up" and the line from the wheel axle to the centre of mass of everything that
+    sits on the axle (chair body + rider + any CoM shift), measured in the driving direction.
+
+    0   -> the weight is exactly above the axle: the chair is balanced, whatever its own tilt is
+    > 0 -> the weight is in front of the axle: the chair falls forward unless it accelerates
+    It is computed from the simulator's centre-of-mass positions, so it automatically includes the rider mass, the
+    random CoM offset and a moving rider body. Shape (num_envs,).
+    """
+    asset = env.scene[asset_cfg.name]
+    if not hasattr(env, "_twb_wheel_ids"):
+        wheels = list(asset.find_bodies(wheel_bodies)[0])
+        env._twb_wheel_ids = torch.tensor(wheels, device=env.device)
+        env._twb_upper_ids = torch.tensor([i for i in range(asset.num_bodies) if i not in wheels], device=env.device)
+    com = _t(asset.data.body_com_pos_w)[..., :3]                              # (N, bodies, 3) world
+    mass = _body_masses(env, asset)[:, env._twb_upper_ids].unsqueeze(-1)      # (N, upper, 1)
+    axle = com[:, env._twb_wheel_ids].mean(dim=1)
+    upper = (com[:, env._twb_upper_ids] * mass).sum(dim=1) / mass.sum(dim=1)
+    r = upper - axle
+    yaw = _t(asset.data.heading_w)
+    forward = r[:, 0] * torch.cos(yaw) + r[:, 1] * torch.sin(yaw)
+    return torch.atan2(forward, r[:, 2])
+
+
+def balance_pose_l2(env, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"), wheel_bodies: str = ".*_wheel") -> torch.Tensor:
+    """Posture penalty that replaces flat_orientation_l2: (balance_error)^2 + (sideways tilt)^2.
+
+    flat_orientation_l2 asks the chair body to be upright. With a rider whose weight is not above the axle that pose
+    is not a balance point. This term asks for "weight above the axle" instead = zero pitch + the offset of this rider.
+    Without any CoM shift both terms are the same.
+    """
+    asset = env.scene[asset_cfg.name]
+    roll = _t(asset.data.projected_gravity_b)[:, 1]
+    return torch.square(balance_error(env, asset_cfg, wheel_bodies)) + torch.square(roll)
+
+
+def balance_pitch_obs(env, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"), wheel_bodies: str = ".*_wheel") -> torch.Tensor:
+    """Privileged observation: the pitch [rad] the chair body must have right now to be balanced (the "offset").
+    0 for a centred rider; about -0.07 rad (-4 deg) if the weight sits 3 cm in front of the axle. Shape (num_envs, 1)."""
+    asset = env.scene[asset_cfg.name]
+    g = _t(asset.data.projected_gravity_b)
+    pitch = torch.atan2(g[:, 0], -g[:, 2])
+    return (pitch - balance_error(env, asset_cfg, wheel_bodies)).unsqueeze(1)
+
+

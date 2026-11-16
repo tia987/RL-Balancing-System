@@ -21,11 +21,13 @@ export OMNI_KIT_ACCEPT_EULA=YES
 source env.sh
 
 # Run the program
-make train_multi ITERATIONS=4000 NUM_ENVS=1024
+# make train_multi ITERATIONS=4000 NUM_ENVS=1024 TASK=Twowheelbalance-Twb-Rider
 # make play_video
-make video_arrow RIDER_MASS=0
+make video_arrow RIDER_MASS=0 CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
 # make video_arrow RIDER_MASS=50
-make video_arrow RIDER_MASS=100
-make video_terrain RIDER_MASS=50 TERRAIN=flat
-make video_terrain RIDER_MASS=50 TERRAIN=random_rough
-make video_terrain RIDER_MASS=50 TERRAIN=slope 
+make video_arrow RIDER_MASS=100 CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
+make video_terrain RIDER_MASS=50 TERRAIN=flat CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
+make video_terrain RIDER_MASS=50 TERRAIN=random_rough CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
+make video_terrain RIDER_MASS=50 TERRAIN=slope CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
+make eval CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
+

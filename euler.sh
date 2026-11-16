@@ -20,14 +20,21 @@ export OMNI_KIT_ACCEPT_EULA=YES
 # Load environment
 source env.sh
 
-# Run the program
-# make train_multi ITERATIONS=4000 NUM_ENVS=1024 TASK=Twowheelbalance-Twb-Rider
-# make play_video
-make video_arrow RIDER_MASS=0 CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
-# make video_arrow RIDER_MASS=50
-make video_arrow RIDER_MASS=100 CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
-make video_terrain RIDER_MASS=50 TERRAIN=flat CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
-make video_terrain RIDER_MASS=50 TERRAIN=random_rough CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
-make video_terrain RIDER_MASS=50 TERRAIN=slope CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
-make eval CHECKPOINT=logs/rsl_rl/twb_rider/1_rider/model_3999.pt TASK=Twowheelbalance-Twb-Rider
+# General configuration
+TASK="Twowheelbalance-Twb-Rider"
 
+# Train
+make train_multi TASK="$TASK" ITERATIONS=4000 NUM_ENVS=1024
+
+# Generate arrow videos
+for mass in 0 100; do
+    make video_arrow TASK="$TASK" RIDER_MASS="$mass"
+done
+
+# Generate terrain videos
+for terrain in flat random_rough slope; do
+    make video_terrain TASK="$TASK" RIDER_MASS=50 TERRAIN="$terrain"
+done
+
+# Evaluate
+make eval TASK="$TASK"

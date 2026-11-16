@@ -1,7 +1,8 @@
 """Shared-control baseline with a rider body: task "Twowheelbalance-Twb-Rider" (meeting 9.2, task 3).
 
 Same terrain, rewards, terminations and commands as TwbEnvCfg. What changes:
-  - robot: chair + "rider" link on a spring-damper hip joint (assets/tw_balance_rider.py), nicer visuals
+  - robot: Genny-like chair + 1.75 m mannequin (assets/tw_balance_rider.py): "rider_legs" fixed on the seat,
+    "rider" (head, trunk, arms) on a spring-damper hip joint
   - the rider leans to drive: lean angle = 0.26 rad per m/s of the speed the rider wants (mdp.rider_body_step).
     The velocity reward still tracks commands.base_velocity, so it is proportional to the tilt.
   - policy input: usual sensors + joystick (turning rate) + measured lean angle. It is NOT told the forward command.
@@ -115,11 +116,13 @@ class TwbRiderEnvCfg(TwbEnvCfg):
         super().__post_init__()
         self.scene.robot = BALANCE_BOT_RIDER_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         # the rider mass now goes on the rider body (1 kg in the URDF + 40-120 kg here), from the first iteration
-        self.events.rider_mass.params["asset_cfg"] = SceneEntityCfg("robot", body_names="rider")
+        # rider mass split like a seated person (Dempster / Winter): head, trunk and arms lean (53.6 %),
+        # pelvis and legs sit on the chair (46.4 %). Genny Zero: users of 40-120 kg.
+        self.events.rider_mass.params["asset_cfg"] = SceneEntityCfg("robot", body_names=["rider", "rider_legs"])
+        self.events.rider_mass.params["mass_fractions"] = {"rider": 0.536, "rider_legs": 0.464}
         self.events.rider_mass.params["mass_start"] = (40.0, 120.0)
         self.curriculum.rider_gate.params["start_kg"] = 120.0
         self.curriculum.rider_gate.params["max_kg"] = 120.0
         # first version: the only CoM shift is the rider leaning. Fixed random offsets can be added again later with
         # person_com_offset on body "rider".
         self.events.person_com_offset = None
-

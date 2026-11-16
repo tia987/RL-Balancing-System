@@ -30,8 +30,13 @@ def _set(asset, masses, inertias, env_ids_cpu):
         view.set_masses(wp.from_torch(masses.contiguous()), ids)
         view.set_inertias(wp.from_torch(inertias.contiguous()), ids)
 
-def rider_mass_curriculum(env, env_ids: torch.Tensor | None, asset_cfg: SceneEntityCfg, mass_start: tuple[float, float] = (5.0, 30.0), mass_end: tuple[float, float] = (40.0, 120.0), ramp_steps: int=48_000):
+def rider_mass_curriculum(env, env_ids: torch.Tensor | None, asset_cfg: SceneEntityCfg, mass_start: tuple[float, float] = (5.0, 30.0), mass_end: tuple[float, float] = (40.0, 120.0), ramp_steps: int=48_000,
+                          mass_fractions: dict[str, float] | None = None):
     """Add a random rider mass [kg] to the bodies in asset_cfg (e.g. base_link) for the resetting envs.
+
+    mass_fractions: optional {body name: fraction}. Each body gets fraction * rider mass (default 1.0 = the whole
+    rider mass on every body in asset_cfg, the old behaviour). The rider task uses
+    {"rider": 0.536, "rider_legs": 0.464}: head, trunk and arms lean, pelvis and legs sit on the chair.
 
     Range of the uniform sampling:
     - time ramp (default): lower/upper bound move linearly from mass_start to mass_end over
@@ -69,7 +74,11 @@ def rider_mass_curriculum(env, env_ids: torch.Tensor | None, asset_cfg: SceneEnt
     masses = env._twb_base_masses.clone()
     inertias = env._twb_base_inertias.clone()
     base = env._twb_base_masses[ids][:, bids]
-    new = base + m.to(dev).unsqueeze(1)
+    if mass_fractions:
+        frac = torch.tensor([float(mass_fractions.get(asset.body_names[b], 1.0)) for b in body_ids], device=dev)
+    else:
+        frac = torch.ones(len(body_ids), device=dev)
+    new = base + m.to(dev).unsqueeze(1) * frac
     masses[ids[:, None], bids] = new
     # scale inertia with mass
     ratio = (new / base).unsqueeze(-1)
@@ -240,5 +249,4 @@ def balance_pitch_obs(env, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"), 
     g = _t(asset.data.projected_gravity_b)
     pitch = torch.atan2(g[:, 0], -g[:, 2])
     return (pitch - balance_error(env, asset_cfg, wheel_bodies)).unsqueeze(1)
-
 

@@ -10,6 +10,8 @@ RIDER_MASS ?= 100
 TERRAIN ?= random_rough
 DIFF ?= 1.0
 CMD_VX ?= 1.0
+# lightest rider in make eval (rider task: 40, it was trained with riders of 40-120 kg)
+EVAL_MASS_LO ?= 0.0
 CHECKPOINT ?=
 EXTRA ?=
 ALL_TERRAINS = flat random_rough slope 
@@ -56,7 +58,7 @@ video_terrain:
 eval:  ## Measure ALL robots on flat ground: table + CSV (speed, pitch, torque, falls vs rider mass and CoM offset). Add CHECKPOINT=logs/rsl_rl/twb/<run>/model_XXXX.pt
 	HEADLESS=1 ENABLE_CAMERAS=1 TWB_EVAL=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 256 physics=isaacsim_physx --video --video_length 1200 $(if $(CHECKPOINT),--checkpoint $(CHECKPOINT),) \
 		env.commands.base_velocity.heading_command=False env.commands.base_velocity.rel_standing_envs=0.0 'env.commands.base_velocity.ranges.lin_vel_x=[$(CMD_VX),$(CMD_VX)]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' \
-		env.observations.policy.enable_corruption=False 'env.events.rider_mass.params.mass_start=[0.0,120.0]' env.curriculum.rider_gate.params.start_kg=120.0 env.curriculum.rider_gate.params.max_kg=120.0 \
+		env.observations.policy.enable_corruption=False 'env.events.rider_mass.params.mass_start=[$(EVAL_MASS_LO),120.0]' env.curriculum.rider_gate.params.start_kg=120.0 env.curriculum.rider_gate.params.max_kg=120.0 \
 		env.curriculum.terrain_levels=null 'env.scene.terrain.terrain_generator.difficulty_range=[0.0,0.0]' \
 		$(foreach t,$(filter-out flat,$(ALL_TERRAINS)),env.scene.terrain.terrain_generator.sub_terrains.$(t).proportion=0.0) $(EXTRA)
 
@@ -68,4 +70,3 @@ tensorboard:	## Start forwarded tensorboard live
 
 logs: ## Save logs on pc lab
 	scp -r logs mlucca@129.132.39.222:.
-

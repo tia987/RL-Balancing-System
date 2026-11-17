@@ -72,4 +72,4 @@ tensorboard:	## Start forwarded tensorboard live
 	tensorboard --logdir logs/twb --port 6006
 
 logs: ## Save logs on pc lab
-	scp -r logs mlucca@129.132.39.222:.
+	scp -r logs/rsl_rl/twb/ mlucca@129.132.39.222:./RL-Balancing-System/logs/

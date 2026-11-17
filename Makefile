@@ -45,20 +45,23 @@ play_video:  ## Play and record a video
 	HEADLESS=1 ENABLE_CAMERAS=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 128 physics=isaacsim_physx --video --video_length 10000 --video_interval 2000
 
 video_arrow: ## Add indication arrows to recording
-	HEADLESS=1 ENABLE_CAMERAS=1 TWB_OVERLAY=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 32 physics=isaacsim_physx --video --video_length 1200 $(if $(CHECKPOINT),--checkpoint $(CHECKPOINT),) env.commands.base_velocity.debug_vis=True \
-		env.commands.base_velocity.heading_command=False  env.commands.base_velocity.rel_standing_envs=0.0 'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' \
-		env.observations.policy.enable_corruption=False 'env.events.rider_mass.params.mass_start=[$(RIDER_MASS),$(RIDER_MASS)]' env.curriculum.rider_gate.params.start_kg=$(RIDER_MASS) env.curriculum.rider_gate.params.max_kg=$(RIDER_MASS) $(EXTRA)
+	HEADLESS=1 ENABLE_CAMERAS=1 TWB_OVERLAY=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 32 physics=isaacsim_physx --video --video_length 1200 \
+	  $(if $(CHECKPOINT),--checkpoint $(CHECKPOINT),) env.commands.base_velocity.debug_vis=True env.commands.base_velocity.heading_command=False  env.commands.base_velocity.rel_standing_envs=0.0 \
+		'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]'  env.observations.policy.enable_corruption=False \ 
+	  'env.events.rider_mass.params.mass_start=[$(RIDER_MASS),$(RIDER_MASS)]' env.curriculum.rider_gate.params.start_kg=$(RIDER_MASS) env.curriculum.rider_gate.params.max_kg=$(RIDER_MASS) $(EXTRA)
 
 video_terrain:
-	HEADLESS=1 ENABLE_CAMERAS=1 TWB_OVERLAY=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 32 physics=isaacsim_physx --video --video_length 1200 $(if $(CHECKPOINT),--checkpoint $(CHECKPOINT),) env.commands.base_velocity.debug_vis=True \
-		env.commands.base_velocity.heading_command=False  env.commands.base_velocity.rel_standing_envs=0.0 'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' \
-		env.observations.policy.enable_corruption=False 'env.events.rider_mass.params.mass_start=[$(RIDER_MASS),$(RIDER_MASS)]' env.curriculum.rider_gate.params.start_kg=$(RIDER_MASS) env.curriculum.rider_gate.params.max_kg=$(RIDER_MASS) $(EXTRA) \
+	HEADLESS=1 ENABLE_CAMERAS=1 TWB_OVERLAY=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 32 physics=isaacsim_physx --video --video_length 1200 \
+		$(if $(CHECKPOINT),--checkpoint $(CHECKPOINT),) env.commands.base_velocity.debug_vis=False env.commands.base_velocity.heading_command=False  env.commands.base_velocity.rel_standing_envs=0.0 \
+		'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' env.observations.policy.enable_corruption=False \
+		'env.events.rider_mass.params.mass_start=[$(RIDER_MASS),$(RIDER_MASS)]' env.curriculum.rider_gate.params.start_kg=$(RIDER_MASS) env.curriculum.rider_gate.params.max_kg=$(RIDER_MASS) $(EXTRA) \
 		$(TERRAIN_OPTS)
 
 eval:  ## Measure ALL robots on flat ground: table + CSV (speed, pitch, torque, falls vs rider mass and CoM offset). Add CHECKPOINT=logs/rsl_rl/twb/<run>/model_XXXX.pt
-	HEADLESS=1 ENABLE_CAMERAS=1 TWB_EVAL=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 256 physics=isaacsim_physx --video --video_length 1200 $(if $(CHECKPOINT),--checkpoint $(CHECKPOINT),) \
-		env.commands.base_velocity.heading_command=False env.commands.base_velocity.rel_standing_envs=0.0 'env.commands.base_velocity.ranges.lin_vel_x=[$(CMD_VX),$(CMD_VX)]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' \
-		env.observations.policy.enable_corruption=False 'env.events.rider_mass.params.mass_start=[$(EVAL_MASS_LO),120.0]' env.curriculum.rider_gate.params.start_kg=120.0 env.curriculum.rider_gate.params.max_kg=120.0 \
+	HEADLESS=1 ENABLE_CAMERAS=1 TWB_EVAL=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 256 physics=isaacsim_physx --video --video_length 1200 \
+		$(if $(CHECKPOINT),--checkpoint $(CHECKPOINT),) env.commands.base_velocity.heading_command=False env.commands.base_velocity.rel_standing_envs=0.0 \
+		'env.commands.base_velocity.ranges.lin_vel_x=[$(CMD_VX),$(CMD_VX)]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' env.observations.policy.enable_corruption=False \
+		'env.events.rider_mass.params.mass_start=[$(EVAL_MASS_LO),120.0]' env.curriculum.rider_gate.params.start_kg=120.0 env.curriculum.rider_gate.params.max_kg=120.0 \
 		env.curriculum.terrain_levels=null 'env.scene.terrain.terrain_generator.difficulty_range=[0.0,0.0]' \
 		$(foreach t,$(filter-out flat,$(ALL_TERRAINS)),env.scene.terrain.terrain_generator.sub_terrains.$(t).proportion=0.0) $(EXTRA)
 

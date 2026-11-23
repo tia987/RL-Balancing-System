@@ -13,6 +13,7 @@ from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import SceneEntityCfg
+from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.utils import configclass
 from isaaclab.utils.noise import UniformNoiseCfg as Unoise
 
@@ -126,3 +127,6 @@ class TwbRiderEnvCfg(TwbEnvCfg):
         # first version: the only CoM shift is the rider leaning. Fixed random offsets can be added again later with
         # person_com_offset on body "rider".
         self.events.person_com_offset = None
+        # posture reward: weight above the axle instead of "chair upright"
+        self.rewards.flat_orientation_l2 = None
+        self.rewards.balance_pose_l2 = RewTerm(func=mdp.balance_pose_l2, weight=-0.5)

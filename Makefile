@@ -68,6 +68,10 @@ eval:  ## Measure ALL robots on flat ground: table + CSV (speed, pitch, torque, 
 reset_logs:  ## Clear previous training
 	rm -rf ~/RL-Balancing-System/logs/
 
+restore_isaaclab: ## Do it in case of scratch removing the files
+	git submodule deinit -f IsaacLab/
+	git submodule update --init
+
 tensorboard:	## Start forwarded tensorboard live
 	tensorboard --logdir logs/twb --port 6006
 

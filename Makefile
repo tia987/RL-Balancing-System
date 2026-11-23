@@ -47,10 +47,10 @@ play_video:  ## Play and record a video
 video_arrow: ## Add indication arrows to recording
 	HEADLESS=1 ENABLE_CAMERAS=1 TWB_OVERLAY=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 32 physics=isaacsim_physx --video --video_length 1200 \
 	  $(if $(CHECKPOINT),--checkpoint $(CHECKPOINT),) env.commands.base_velocity.debug_vis=True env.commands.base_velocity.heading_command=False  env.commands.base_velocity.rel_standing_envs=0.0 \
-		'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]'  env.observations.policy.enable_corruption=False \ 
+		'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]'  env.observations.policy.enable_corruption=False \
 	  'env.events.rider_mass.params.mass_start=[$(RIDER_MASS),$(RIDER_MASS)]' env.curriculum.rider_gate.params.start_kg=$(RIDER_MASS) env.curriculum.rider_gate.params.max_kg=$(RIDER_MASS) $(EXTRA)
 
-video_terrain:
+video_terrain: ## Make video for specific terrains 
 	HEADLESS=1 ENABLE_CAMERAS=1 TWB_OVERLAY=1 isaaclab play --rl_library rsl_rl --task $(TASK) --viz kit --num_envs 32 physics=isaacsim_physx --video --video_length 1200 \
 		$(if $(CHECKPOINT),--checkpoint $(CHECKPOINT),) env.commands.base_velocity.debug_vis=False env.commands.base_velocity.heading_command=False  env.commands.base_velocity.rel_standing_envs=0.0 \
 		'env.commands.base_velocity.ranges.lin_vel_x=[1.0,1.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' env.observations.policy.enable_corruption=False \

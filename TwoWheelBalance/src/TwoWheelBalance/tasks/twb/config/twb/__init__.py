@@ -34,6 +34,7 @@ gym.register(
         "env_cfg_entry_point": f"{__name__}.env_cfg_rider:TwbRiderEnvCfg",
         "default_agent": "rsl_rl",
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_rider_cfg:PPORunnerRiderCfg",
+        # TODO: add distillation in the future
     },
 )
 

@@ -14,7 +14,7 @@ from .rsl_rl_ppo_cfg import PPORunnerCfg
 
 @configclass
 class PPORunnerRiderCfg(PPORunnerCfg):
-    experiment_name = "twb"   # separate log folder: logs/rsl_rl/twb_rider
+    experiment_name = "twb"   # separate log folder: logs/rsl_rl/twb
     # teacher: the actor also sees rider mass and balance pitch; only the critic sees what the rider wants
     obs_groups = {"actor": ["policy", "privileged"], "critic": ["policy", "privileged", "intent"]}
     actor = RslRlMLPModelCfg(

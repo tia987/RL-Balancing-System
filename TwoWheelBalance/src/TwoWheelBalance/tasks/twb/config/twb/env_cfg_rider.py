@@ -122,7 +122,7 @@ class TwbRiderEnvCfg(TwbEnvCfg):
         self.events.rider_mass.params["asset_cfg"] = SceneEntityCfg("robot", body_names=["rider", "rider_legs"])
         self.events.rider_mass.params["mass_fractions"] = {"rider": 0.536, "rider_legs": 0.464}
         self.events.rider_mass.params["mass_start"] = (40.0, 120.0)
-        self.curriculum.rider_gate.params["start_kg"] = 120.0
+        self.curriculum.rider_gate.params["start_kg"] = 0.0
         self.curriculum.rider_gate.params["max_kg"] = 120.0
         # first version: the only CoM shift is the rider leaning. Fixed random offsets can be added again later with
         # person_com_offset on body "rider".

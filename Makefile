@@ -71,6 +71,8 @@ reset_logs:  ## Clear previous training
 restore_isaaclab: ## Do it in case of scratch removing the files
 	git submodule deinit -f IsaacLab/
 	git submodule update --init
+	rm -rf /cluster/scratch/mlucca/.uv-cache
+	bash installation_euler.sh
 
 tensorboard:	## Start forwarded tensorboard live
 	tensorboard --logdir logs/twb --port 6006

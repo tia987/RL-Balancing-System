@@ -27,14 +27,14 @@ TASK="Twowheelbalance-Twb-Rider"
 make train_multi TASK="$TASK" ITERATIONS=4000 NUM_ENVS=1024
 
 # Generate arrow videos
-for mass in 0 100; do
+for mass in 40 80 120; do
     make video_arrow TASK="$TASK" RIDER_MASS="$mass"
 done
 
 # Generate terrain videos
-# for terrain in flat random_rough slope; do
-#     make video_terrain TASK="$TASK" RIDER_MASS=50 TERRAIN="$terrain"
-# done
+for terrain in flat random_rough slope; do
+    make video_terrain TASK="$TASK" RIDER_MASS=60 TERRAIN="$terrain"
+done
 
 # Evaluate
 make eval TASK="$TASK"

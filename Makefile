@@ -75,7 +75,7 @@ restore_isaaclab: ## Do it in case of scratch removing the files
 	bash installation_euler.sh
 
 tensorboard:	## Start forwarded tensorboard live
-	tensorboard --logdir logs/twb --port 6006
+	tensorboard --logdir logs/rsl_rl --port 6006
 
 logs: ## Save logs on pc lab
 	scp -r logs/rsl_rl/twb/ mlucca@129.132.39.222:./RL-Balancing-System/logs/
